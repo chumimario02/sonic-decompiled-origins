@@ -133,8 +133,12 @@ Con estas 5 direcciones (destinos de tabla de salto dentro de funciones):
 Avance: se añadieron las 5 direcciones como `extra_seeds` en el `[functions]`
 del `game.toml` de Sonic 2. Resultado: el miss `$000C62` se resolvió; quedan
 4 ($00159E, $001594 en $001554; $0005E4 en $000408; $03A1CC en $015FCC).
-Próximo paso: revisar en `code_generator.c` (`seed_pc_idx_dispatch_targets`
-/ `probe_pc_idx_targets`) por qué esos 4 seeds no se insertan en el CFG
-(probablemente caen justo al otro lado del límite de su función, o el JMP
-no es de la forma `(d8,PC,Xn)`). Herramientas: Ghidra para confirmar las
-tablas y sus límites.
+ESTADO 2026-10-31 (fin de sesión): la voz SEGAAA ya suena y el juego llega al
+frame ~575. Añadir los misses como entradas de `[functions].extra` funciona,
+pero `$000654` rompió el juego (ILEGAL pc=00065E: se interpretó DATA como
+código al partir la función). Lección: estos Duff-devices deben declararse
+como dispatch IN-función (`extra_seeds` + el probe de `probe_pc_idx_targets`),
+no como entradas de función. Próximo paso: probar `$000654`/`$00061E` en
+`extra_seeds` en lugar de `extra`, o añadir el soporte de switches
+interiores en el codegen. Ghidra: abrir `sonic2.bin` en $000408-$000700
+para ver la tabla real (VBlank) y marcar sus destinos.
