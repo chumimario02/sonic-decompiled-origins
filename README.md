@@ -78,3 +78,25 @@ sudo apt install -y build-essential cmake ninja-build libsdl2-dev git pkg-config
 Todo el mÃ©rito de las recompilaciones es de **mstan** y del proyecto
 [segagenesisrecomp](https://github.com/mstan/segagenesisrecomp).
 *Sonic the Hedgehog* es una marca de SEGA. Proyecto fan, sin Ã¡nimo de lucro.
+
+## Estado en Windows (probado)
+
+| Juego | Estado | Notas |
+|---|---|---|
+| **Sonic 1** | ? funciona | compilado con MSVC + SDK |
+| **Sonic SMS** | ? funciona | necesita `--window 3` |
+| **Sonic 3 & K** | ?? compila | rechaza la ROM si el CRC32 no es `63522553` |
+| **Sonic 2** | ?? no compila | submódulos rotos en el repo original |
+
+### Receta que funcionó (MSVC)
+
+1. Instalar **Visual Studio Build Tools** con el workload C++ y el **Windows SDK**.
+2. Configurar con Ninja + `cl` dentro de `VsDevCmd.bat`, añadiendo a mano
+   `INCLUDE`, `LIB` y el `bin\x64` del SDK (el SDK no se registra solo).
+3. `SDL2_DIR` apuntando al paquete VC que trae el repo de Sonic 1
+   (`segagenesisrecomp/runner/external/SDL2/SDL2-2.28.5/cmake`).
+4. El lanzador debe:
+   - pasar la **ROM en ruta absoluta** (los juegos la resuelven desde su carpeta),
+   - lanzar con `CreateProcess` y `lpDirectory` = carpeta del proyecto (si el cwd
+     es `games/`, el juego sale al instante),
+   - para SMS: `--window 3`.

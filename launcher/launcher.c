@@ -10,12 +10,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#ifdef _WIN32
+#  include <windows.h>
+#  include <shellapi.h>
+#endif
 
 #ifdef _WIN32
 #include <process.h>
 #else
 #include <unistd.h>
 #include <sys/wait.h>
+#endif
+
+#ifdef _WIN32
+#  define EXE_SUFFIX ".exe"
+#else
+#  define EXE_SUFFIX ""
 #endif
 
 #define WINDOW_W 640
@@ -25,16 +36,20 @@ struct game {
   const char *title;
   const char *binary;
   const char *rom;
+  const char *args;
   const char *hint;
 };
 
 static const struct game games[] = {
-  { "SONIC 1",        "games/sonic1",   "roms/sonic1.bin",   "MEGA DRIVE" },
-  { "SONIC 2",        "games/sonic2",   "roms/sonic2.bin",   "MEGA DRIVE" },
-  { "SONIC 3 & K",    "games/s3k",      "roms/s3k.bin",      "MEGA DRIVE" },
-  { "SONIC SMS",      "games/sonicsms", "roms/sonicsms.sms", "MASTER SYSTEM" },
+  { "SONIC 1",        "games/sonic1",   "roms/sonic1.bin",   "",         "MEGA DRIVE" },
+  { "SONIC 2",        "games/sonic2",   "roms/sonic2.bin",   "",         "MEGA DRIVE" },
+  { "SONIC 3 & K",    "games/s3k",      "roms/s3k.bin",      "",         "MEGA DRIVE" },
+  { "SONIC SMS",      "games/sonicsms", "roms/sonicsms.sms", "--window 3", "MASTER SYSTEM" },
 };
 static const int game_count = (int)(sizeof(games) / sizeof(games[0]));
+
+/* Working directory the games expect (the folder with games/ and roms/). */
+static char g_workdir[512];
 
 /* --- 5x7 bitmap font, uppercase only ------------------------------------- */
 static const unsigned char font[][7] = {
@@ -95,6 +110,15 @@ static void draw_text(SDL_Renderer *r, int x, int y, int scale, const char *s) {
   }
 }
 
+static int game_binary_exists(const char *binary) {
+  char path[512];
+  snprintf(path, sizeof(path), "%s%s", binary, EXE_SUFFIX);
+  FILE *f = fopen(path, "rb");
+  if (!f) return 0;
+  fclose(f);
+  return 1;
+}
+
 static int file_exists(const char *path) {
   FILE *f = fopen(path, "rb");
   if (!f) return 0;
@@ -103,16 +127,51 @@ static int file_exists(const char *path) {
 }
 
 static void launch(const struct game *g) {
-  if (!file_exists(g->binary) || !file_exists(g->rom)) {
+  if (!game_binary_exists(g->binary) || !file_exists(g->rom)) {
     return;
   }
 
+  char exe[512];
+  snprintf(exe, sizeof(exe), "%s%s", g->binary, EXE_SUFFIX);
+
+  char abs_exe[512];
+  char abs_rom[512];
+  FILE *lg = fopen("launcher.log", "a");
+
 #ifdef _WIN32
-  _spawnl(_P_NOWAIT, g->binary, g->binary, g->rom, (char *)NULL);
+  if (!_fullpath(abs_exe, exe, sizeof(abs_exe))) { if (lg) { fprintf(lg, "fullpath FAIL exe=%s\n", exe); fclose(lg); } return; }
+  if (!_fullpath(abs_rom, g->rom, sizeof(abs_rom))) { if (lg) { fprintf(lg, "fullpath FAIL rom=%s\n", g->rom); fclose(lg); } return; }
+  char cmdline[1024];
+  if (g->args && g->args[0]) {
+    snprintf(cmdline, sizeof(cmdline), "%s \"%s\"", g->args, abs_rom);
+  } else {
+    snprintf(cmdline, sizeof(cmdline), "\"%s\"", abs_rom);
+  }
+  char fullcmd[1200];
+  snprintf(fullcmd, sizeof(fullcmd), "\"%s\" %s", abs_exe, cmdline);
+
+  STARTUPINFOA si;
+  PROCESS_INFORMATION pi;
+  memset(&si, 0, sizeof(si));
+  si.cb = sizeof(si);
+  memset(&pi, 0, sizeof(pi));
+
+  BOOL ok = CreateProcessA(abs_exe, fullcmd, NULL, NULL, FALSE, 0, NULL,
+                           g_workdir[0] ? g_workdir : NULL, &si, &pi);
+  if (ok) {
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+  }
+  if (lg) { fprintf(lg, "spawn ok=%d err=%lu cwd=%s cmd=%s\n", (int)ok, (unsigned long)GetLastError(), g_workdir, fullcmd); fclose(lg); }
 #else
+  if (!realpath(g->rom, abs_rom)) return;
   pid_t pid = fork();
   if (pid == 0) {
-    execl(g->binary, g->binary, g->rom, (char *)NULL);
+    if (g->args && g->args[0]) {
+      execl(exe, exe, g->args, abs_rom, (char *)NULL);
+    } else {
+      execl(exe, exe, abs_rom, (char *)NULL);
+    }
     _exit(127);
   } else if (pid > 0) {
     waitpid(pid, NULL, 0);
@@ -121,8 +180,19 @@ static void launch(const struct game *g) {
 }
 
 int main(int argc, char **argv) {
-  (void)argc;
-  (void)argv;
+#ifdef _WIN32
+  if (!_fullpath(g_workdir, ".", sizeof(g_workdir))) g_workdir[0] = 0;
+#else
+  if (!realpath(".", g_workdir)) g_workdir[0] = 0;
+#endif
+
+  if (argc >= 3 && strcmp(argv[1], "--launch") == 0) {
+    int idx = atoi(argv[2]);
+    if (idx >= 0 && idx < game_count) {
+      launch(&games[idx]);
+    }
+    return 0;
+  }
 
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0) {
     fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
@@ -186,7 +256,7 @@ int main(int argc, char **argv) {
 
     for (int i = 0; i < game_count; i++) {
       const struct game *g = &games[i];
-      const int ok = file_exists(g->binary) && file_exists(g->rom);
+      const int ok = game_binary_exists(g->binary) && file_exists(g->rom);
       const int y = 140 + i * 60;
 
       if (i == selected) {
