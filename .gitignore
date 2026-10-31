@@ -2,4 +2,7 @@ roms/
 games/
 src/
 launcher/launcher
+launcher/launcher.exe
+launcher.log
+spawn.out
 *.o
