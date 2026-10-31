@@ -1,0 +1,5 @@
+roms/
+games/
+src/
+launcher/launcher
+*.o
