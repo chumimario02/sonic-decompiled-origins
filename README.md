@@ -100,3 +100,14 @@ Todo el mÃ©rito de las recompilaciones es de **mstan** y del proyecto
    - lanzar con `CreateProcess` y `lpDirectory` = carpeta del proyecto (si el cwd
      es `games/`, el juego sale al instante),
    - para SMS: `--window 3`.
+### Parches que hicieron falta
+
+- **Sonic 2**: el repo apunta a un commit de `recomp-ui` que ya no existe en GitHub;
+  se sustituye por el de Sonic 1 y se usa su motor con
+  `-DGENESIS_RECOMP_ROOT`. Además hay que crear a mano las etiquetas
+  `label_XXXX` que faltan en el C generado (huecos del recompilador).
+- **CRC de la ROM**: el motor rechaza ROMs que no son la revisión exacta. Como el
+  C se genera **desde nuestra propia ROM**, se cambia ese rechazo por un aviso en
+  `segagenesisrecomp/runner/main.c` (bloque `expected_rom_crc32`).
+- **Sonic 3 & K**: compila solo la variante combinada
+  (`--target Sonic3KRecomp`); las variantes S3 y S&K piden sus propias ROMs.
