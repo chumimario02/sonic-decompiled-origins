@@ -133,12 +133,13 @@ Con estas 5 direcciones (destinos de tabla de salto dentro de funciones):
 Avance: se añadieron las 5 direcciones como `extra_seeds` en el `[functions]`
 del `game.toml` de Sonic 2. Resultado: el miss `$000C62` se resolvió; quedan
 4 ($00159E, $001594 en $001554; $0005E4 en $000408; $03A1CC en $015FCC).
-ESTADO 2026-10-31 (fin de sesión): la voz SEGAAA ya suena y el juego llega al
-frame ~575. Añadir los misses como entradas de `[functions].extra` funciona,
-pero `$000654` rompió el juego (ILEGAL pc=00065E: se interpretó DATA como
-código al partir la función). Lección: estos Duff-devices deben declararse
-como dispatch IN-función (`extra_seeds` + el probe de `probe_pc_idx_targets`),
-no como entradas de función. Próximo paso: probar `$000654`/`$00061E` en
-`extra_seeds` en lugar de `extra`, o añadir el soporte de switches
-interiores en el codegen. Ghidra: abrir `sonic2.bin` en $000408-$000700
-para ver la tabla real (VBlank) y marcar sus destinos.
+ESTADO 2026-10-31 (fin de sesión): suena el grito SEGA, los 3 destellos y la
+música del título. Se congela en el frame ~575 justo antes de dibujar el título,
+por el miss `$000654` (in $000408). Datos del bucle:
+- `$000654` en [functions].extra  -> ILEGAL pc=00065E (ejecuta DATA: opcode F614).
+- `$000654` solo en extra_seeds  -> sin efecto (sigue el miss).
+- Mejor build hasta ahora: `$00061E` en [functions].extra, `$000654` fuera.
+Próximo paso (Ghidra): desensamblar $000620-$0006A0 de sonic2.bin (VBlank) para
+ver la forma del JMP y la tabla en $000654; probablemente sea otro formato de
+tabla (no (d8,PC,Xn)) o una secuencia que el probe del codegen no reconoce.
+También probar: declararla como [[jump_table]] en sonic2.disasm_jumptables.toml.
