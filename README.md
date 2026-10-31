@@ -130,7 +130,11 @@ Con estas 5 direcciones (destinos de tabla de salto dentro de funciones):
 ```
 
 `dispatch_misses.toml` está vacío (bien: no faltan funciones completas).
-El trabajo es declarar esos destinos como etiquetas interiores para que el
-recompilador emita un `switch` dentro de la función (no una semilla, que
-partiría la función padre). Herramientas: Ghidra para confirmar la tabla,
-y las anotaciones del repo para regenerar.
+Avance: se añadieron las 5 direcciones como `extra_seeds` en el `[functions]`
+del `game.toml` de Sonic 2. Resultado: el miss `$000C62` se resolvió; quedan
+4 ($00159E, $001594 en $001554; $0005E4 en $000408; $03A1CC en $015FCC).
+Próximo paso: revisar en `code_generator.c` (`seed_pc_idx_dispatch_targets`
+/ `probe_pc_idx_targets`) por qué esos 4 seeds no se insertan en el CFG
+(probablemente caen justo al otro lado del límite de su función, o el JMP
+no es de la forma `(d8,PC,Xn)`). Herramientas: Ghidra para confirmar las
+tablas y sus límites.
