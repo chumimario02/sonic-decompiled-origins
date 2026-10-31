@@ -111,3 +111,26 @@ Todo el mÃ©rito de las recompilaciones es de **mstan** y del proyecto
   `segagenesisrecomp/runner/main.c` (bloque `expected_rom_crc32`).
 - **Sonic 3 & K**: compila solo la variante combinada
   (`--target Sonic3KRecomp`); las variantes S3 y S&K piden sus propias ROMs.
+### Sonic 2: siguiente paso (pendiente)
+
+Compila y arranca, pero la pantalla sale negra. El runtime deja el diagnóstico en:
+
+```
+SonicTheHedgehog2Recomp/build-msvc/interior_label_misses.toml
+```
+
+Con estas 5 direcciones (destinos de tabla de salto dentro de funciones):
+
+```
+0x000C62 (en $000408)
+0x00159E (en $001554)
+0x001594 (en $001554)
+0x0005E4 (en $000408)
+0x03A1CC (en $015FCC)
+```
+
+`dispatch_misses.toml` está vacío (bien: no faltan funciones completas).
+El trabajo es declarar esos destinos como etiquetas interiores para que el
+recompilador emita un `switch` dentro de la función (no una semilla, que
+partiría la función padre). Herramientas: Ghidra para confirmar la tabla,
+y las anotaciones del repo para regenerar.
