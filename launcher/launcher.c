@@ -33,22 +33,23 @@
 #define WINDOW_H 480
 
 struct game {
-  const char *title;
+  const char *title;      /* "SONIC 1" */
+  const char *version;    /* "RECOMP" / "RSDK" / NULL (single) */
   const char *binary;
   const char *rom;
   const char *args;
   const char *hint;
-  const char *cwd; /* per-game working dir (NULL = project root) */
+  const char *cwd;
 };
 
 static const struct game games[] = {
-  { "SONIC 1",        "games/sonic1",   "roms/sonic1.bin",   "",         "MEGA DRIVE", NULL },
-  { "SONIC 2",        "games/sonic2",   "roms/sonic2.bin",   "",         "MEGA DRIVE", NULL },
-  { "SONIC CD",       "games/soniccd/SonicCD", "games/soniccd/Data.rsdk", "", "SEGA CD", NULL },
-  { "SONIC 1 RSDK",  "games/sonic1rsdk/RSDKv4", "games/sonic1rsdk/Data.rsdk", "usingCWD=true", "SEGA CD", "games/sonic1rsdk" },
-  { "SONIC 2 RSDK",  "games/sonic2rsdk/RSDKv4", "games/sonic2rsdk/Data.rsdk", "usingCWD=true", "SEGA CD", "games/sonic2rsdk" },
-  { "SONIC 3 & K",    "games/s3k",      "roms/s3k.bin",      "",         "MEGA DRIVE", NULL },
-  { "SONIC SMS",      "games/sonicsms", "roms/sonicsms.sms", "--window 3", "MASTER SYSTEM", NULL },
+  { "SONIC 1", "RECOMP", "games/sonic1",        "roms/sonic1.bin",   "",         "MEGA DRIVE", NULL },
+  { "SONIC 1", "RSDK",   "games/sonic1rsdk/RSDKv4", "games/sonic1rsdk/Data.rsdk", "usingCWD=true", "SEGA CD", "games/sonic1rsdk" },
+  { "SONIC 2", "RECOMP", "games/sonic2",        "roms/sonic2.bin",   "",         "MEGA DRIVE", NULL },
+  { "SONIC 2", "RSDK",   "games/sonic2rsdk/RSDKv4", "games/sonic2rsdk/Data.rsdk", "usingCWD=true", "SEGA CD", "games/sonic2rsdk" },
+  { "SONIC 3 & K", NULL, "games/s3k",      "roms/s3k.bin",      "",         "MEGA DRIVE", NULL },
+  { "SONIC SMS",   NULL, "games/sonicsms", "roms/sonicsms.sms", "--window 3", "MASTER SYSTEM", NULL },
+  { "SONIC CD",    NULL, "games/soniccd/SonicCD", "games/soniccd/Data.rsdk", "", "SEGA CD", NULL },
 };
 static const int game_count = (int)(sizeof(games) / sizeof(games[0]));
 
@@ -256,7 +257,18 @@ int main(int argc, char **argv) {
     }
   }
 
-  int selected = 0;
+  /* Two-level menu: first pick the game, then (if it has multiple versions)
+     pick RECOMP vs RSDK. Single-version games launch directly. */
+  static const char *game_names[] = {
+    "SONIC 1", "SONIC 2", "SONIC 3 & K", "SONIC SMS", "SONIC CD"
+  };
+  static const int game_first[] = { 0, 2, 4, 5, 6 };
+  static const int game_count_v[] = { 2, 2, 1, 1, 1 };
+  static const int n_games = 5;
+
+  int level = 0;       /* 0 = game, 1 = version */
+  int sel_game = 0;
+  int sel_ver = 0;
   int running = 1;
 
   while (running) {
@@ -265,21 +277,53 @@ int main(int argc, char **argv) {
       if (ev.type == SDL_QUIT) {
         running = 0;
       } else if (ev.type == SDL_KEYDOWN) {
-        switch (ev.key.keysym.sym) {
-        case SDLK_UP:    selected = (selected + game_count - 1) % game_count; break;
-        case SDLK_DOWN:  selected = (selected + 1) % game_count; break;
-        case SDLK_RETURN:
-        case SDLK_SPACE: launch(&games[selected]); break;
-        case SDLK_ESCAPE: running = 0; break;
-        default: break;
+        if (level == 0) {
+          switch (ev.key.keysym.sym) {
+          case SDLK_UP:    sel_game = (sel_game + n_games - 1) % n_games; break;
+          case SDLK_DOWN:  sel_game = (sel_game + 1) % n_games; break;
+          case SDLK_RETURN:
+          case SDLK_SPACE:
+            if (game_count_v[sel_game] == 1) {
+              launch(&games[game_first[sel_game]]);
+            } else {
+              level = 1; sel_ver = 0;
+            }
+            break;
+          case SDLK_ESCAPE: running = 0; break;
+          default: break;
+          }
+        } else {
+          int nver = game_count_v[sel_game];
+          switch (ev.key.keysym.sym) {
+          case SDLK_UP:    sel_ver = (sel_ver + nver - 1) % nver; break;
+          case SDLK_DOWN:  sel_ver = (sel_ver + 1) % nver; break;
+          case SDLK_RETURN:
+          case SDLK_SPACE: launch(&games[game_first[sel_game] + sel_ver]); break;
+          case SDLK_ESCAPE: level = 0; break;
+          default: break;
+          }
         }
       } else if (ev.type == SDL_CONTROLLERBUTTONDOWN) {
-        switch (ev.cbutton.button) {
-        case SDL_CONTROLLER_BUTTON_DPAD_UP:   selected = (selected + game_count - 1) % game_count; break;
-        case SDL_CONTROLLER_BUTTON_DPAD_DOWN: selected = (selected + 1) % game_count; break;
-        case SDL_CONTROLLER_BUTTON_A:         launch(&games[selected]); break;
-        case SDL_CONTROLLER_BUTTON_B:         running = 0; break;
-        default: break;
+        if (level == 0) {
+          switch (ev.cbutton.button) {
+          case SDL_CONTROLLER_BUTTON_DPAD_UP:   sel_game = (sel_game + n_games - 1) % n_games; break;
+          case SDL_CONTROLLER_BUTTON_DPAD_DOWN: sel_game = (sel_game + 1) % n_games; break;
+          case SDL_CONTROLLER_BUTTON_A:
+            if (game_count_v[sel_game] == 1) launch(&games[game_first[sel_game]]);
+            else { level = 1; sel_ver = 0; }
+            break;
+          case SDL_CONTROLLER_BUTTON_B: running = 0; break;
+          default: break;
+          }
+        } else {
+          int nver = game_count_v[sel_game];
+          switch (ev.cbutton.button) {
+          case SDL_CONTROLLER_BUTTON_DPAD_UP:   sel_ver = (sel_ver + nver - 1) % nver; break;
+          case SDL_CONTROLLER_BUTTON_DPAD_DOWN: sel_ver = (sel_ver + 1) % nver; break;
+          case SDL_CONTROLLER_BUTTON_A:         launch(&games[game_first[sel_game] + sel_ver]); break;
+          case SDL_CONTROLLER_BUTTON_B:        level = 0; break;
+          default: break;
+          }
         }
       }
     }
@@ -295,41 +339,60 @@ int main(int argc, char **argv) {
     draw_text(ren, 40, 40, 3, "SONIC DECOMPILED ORIGINS");
 
     SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
-    draw_text(ren, 40, 80, 1, "ROM A C NATIVO. PON TUS ROMS EN ROMS/");
+    if (level == 0) {
+      draw_text(ren, 40, 80, 1, "ELIGE JUEGO. ENTER: ELEGIR   ESC: SALIR");
+    } else {
+      char hdr[64];
+      snprintf(hdr, sizeof(hdr), "%s - ELIGE VERSION (ENTER: JUGAR, ESC: VOLVER)", game_names[sel_game]);
+      draw_text(ren, 40, 80, 1, hdr);
+    }
 
-    for (int i = 0; i < game_count; i++) {
-      const struct game *g = &games[i];
-      const int ok = game_binary_exists(g->binary) && file_exists(g->rom);
-      const int y = 140 + i * 60;
-
-      if (i == selected) {
-        SDL_SetRenderDrawColor(ren, 0x1a, 0x24, 0x3a, 255);
-        SDL_Rect hi = {24, y - 12, WINDOW_W - 48, 48};
-        SDL_RenderFillRect(ren, &hi);
-        SDL_SetRenderDrawColor(ren, 0xf8, 0xc8, 0x20, 255);
-        SDL_Rect cursor = {32, y, 10, 10};
-        SDL_RenderFillRect(ren, &cursor);
+    int y = 120;
+    if (level == 0) {
+      for (int i = 0; i < n_games; i++) {
+        const int ok = game_binary_exists(games[game_first[i]].binary) && file_exists(games[game_first[i]].rom);
+        if (i == sel_game) SDL_SetRenderDrawColor(ren, 0xff, 0xff, 0xff, 255);
+        else SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
+        char line[64];
+        snprintf(line, sizeof(line), "%s%s", game_names[i], (game_count_v[i] > 1) ? "  >" : "");
+        draw_text(ren, 60, y, 2, line);
+        if (!ok) {
+          SDL_SetRenderDrawColor(ren, 0xff, 0x40, 0x40, 255);
+          draw_text(ren, 320, y, 1, "(FALTA ROM O JUEGO)");
+        }
+        y += 40;
       }
-
-      SDL_SetRenderDrawColor(ren, ok ? 0xf0, 0xf4, 0xff : 0x70, 0x76, 0x88, 255);
-      draw_text(ren, 56, y, 2, g->title);
-
-      SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
-      draw_text(ren, 300, y + 4, 1, g->hint);
-
-      if (!ok) {
-        SDL_SetRenderDrawColor(ren, 0xe0, 0x50, 0x50, 255);
-        draw_text(ren, 300, y + 16, 1, "(FALTA ROM O JUEGO)");
+    } else {
+      int first = game_first[sel_game];
+      int nver = game_count_v[sel_game];
+      for (int v = 0; v < nver; v++) {
+        const struct game *g = &games[first + v];
+        const int ok = game_binary_exists(g->binary) && file_exists(g->rom);
+        if (v == sel_ver) SDL_SetRenderDrawColor(ren, 0xff, 0xff, 0xff, 255);
+        else SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
+        const char *verlabel = g->version ? g->version : "UNICO";
+        draw_text(ren, 60, y, 2, verlabel);
+        SDL_SetRenderDrawColor(ren, 0x80, 0x88, 0x98, 255);
+        char hint[80];
+        snprintf(hint, sizeof(hint), "%s  (%s)", g->hint, g->binary);
+        draw_text(ren, 60, y + 22, 1, hint);
+        if (!ok) {
+          SDL_SetRenderDrawColor(ren, 0xff, 0x40, 0x40, 255);
+          draw_text(ren, 320, y, 1, "(FALTA ROM O JUEGO)");
+        }
+        y += 56;
       }
     }
 
     SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
-    draw_text(ren, 40, WINDOW_H - 40, 1, "FLECHAS: ELEGIR   ENTER: JUGAR   ESC: SALIR");
+    draw_text(ren, 40, WINDOW_H - 40, 1, "FLECHAS: ELEGIR   ENTER: JUGAR   ESC: SALIR/VOLVER");
 
     SDL_RenderPresent(ren);
   }
 
   if (pad) SDL_GameControllerClose(pad);
+
+    if (pad) SDL_GameControllerClose(pad);
   SDL_DestroyRenderer(ren);
   SDL_DestroyWindow(win);
   SDL_Quit();
