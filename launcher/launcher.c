@@ -113,7 +113,7 @@ static void draw_text(SDL_Renderer *r, int x, int y, int scale, const char *s) {
 
 static int game_binary_exists(const char *binary) {
   char path[512];
-  snprintf(path, sizeof(path), "%s%s", binary, EXE_SUFFIX);
+  snprintf(path, sizeof(path), "%s\\%s%s", g_workdir[0] ? g_workdir : ".", binary, EXE_SUFFIX);
   FILE *f = fopen(path, "rb");
   if (!f) return 0;
   fclose(f);
@@ -121,7 +121,9 @@ static int game_binary_exists(const char *binary) {
 }
 
 static int file_exists(const char *path) {
-  FILE *f = fopen(path, "rb");
+  char full[512];
+  snprintf(full, sizeof(full), "%s\\%s", g_workdir[0] ? g_workdir : ".", path);
+  FILE *f = fopen(full, "rb");
   if (!f) return 0;
   fclose(f);
   return 1;
@@ -202,8 +204,11 @@ int main(int argc, char **argv) {
     const char *tries[4] = { ".", "..", "..\\..", NULL };
     for (int t = 0; tries[t]; t++) {
       snprintf(cand, sizeof(cand), "%s\\games", tries[t]);
-      FILE *f = fopen(cand, "rb");
-      if (f) { fclose(f); snprintf(g_workdir, sizeof(g_workdir), "%s", tries[t]); break; }
+      DWORD attr = GetFileAttributesA(cand);
+      if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY)) {
+        snprintf(g_workdir, sizeof(g_workdir), "%s", tries[t]);
+        break;
+      }
     }
     if (!g_workdir[0]) {
       /* fall back to the exe's own directory */
