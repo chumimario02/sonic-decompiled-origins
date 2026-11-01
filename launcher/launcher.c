@@ -291,12 +291,15 @@ int main(int argc, char **argv) {
         case SDLK_UP:    selected = (selected + game_count - 1) % game_count; break;
         case SDLK_DOWN:  selected = (selected + 1) % game_count; break;
         case SDLK_RETURN:
+          if (ev.key.keysym.mod & KMOD_ALT) {
+            fullscreen = !fullscreen;
+            SDL_SetWindowFullscreen(win, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+          } else {
+            launch(&games[selected]);
+          }
+          break;
         case SDLK_SPACE: launch(&games[selected]); break;
         case SDLK_ESCAPE: running = 0; break;
-        case SDLK_F11:
-          fullscreen = !fullscreen;
-          SDL_SetWindowFullscreen(win, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
-          break;
         default: break;
         }
       } else if (ev.type == SDL_CONTROLLERBUTTONDOWN) {
