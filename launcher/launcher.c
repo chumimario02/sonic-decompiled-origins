@@ -321,12 +321,12 @@ int main(int argc, char **argv) {
     SDL_RenderFillRect(ren, &bar);
 
     SDL_SetRenderDrawColor(ren, 0xf8, 0xc8, 0x20, 255);
-    draw_text(ren, 40, 30, 3, "SONIC DECOMPILED ORIGINS");
+    draw_text(ren, (WINDOW_W - (int)strlen("SONIC DECOMPILED ORIGINS") * 6 * 4) / 2, 20, 4, "SONIC DECOMPILED ORIGINS");
 
     SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
-    draw_text(ren, 40, 70, 1, "ELIGE JUEGO. FLECHAS: MOVER   ENTER: JUGAR   ESC: SALIR");
+    draw_text(ren, (WINDOW_W - (int)strlen("ELIGE JUEGO. FLECHAS: MOVER   ENTER: JUGAR   ESC: SALIR") * 6 * 2) / 2, 70, 2, "ELIGE JUEGO. FLECHAS: MOVER   ENTER: JUGAR   ESC: SALIR");
 
-    int y = 110;
+    int y = 120;
     for (int i = 0; i < game_count; i++) {
       const struct game *g = &games[i];
       const int ok = game_binary_exists(g->binary) && file_exists(g->rom);
@@ -334,12 +334,13 @@ int main(int argc, char **argv) {
       else SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
       char line[64];
       snprintf(line, sizeof(line), "%s  (%s)", g->title, g->hint);
-      draw_text(ren, 60, y, 3, line);
+      int lw = (int)strlen(line) * 6 * 4;
+      draw_text(ren, (WINDOW_W - lw) / 2, y, 4, line);
       if (!ok) {
         SDL_SetRenderDrawColor(ren, 0xff, 0x40, 0x40, 255);
-        draw_text(ren, 60, y + 26, 2, "(FALTA ROM O JUEGO)");
+        draw_text(ren, (WINDOW_W - (int)strlen("(FALTA ROM O JUEGO)") * 6 * 3) / 2, y + 34, 3, "(FALTA ROM O JUEGO)");
       }
-      y += 52;
+      y += 70;
     }
 
     SDL_RenderPresent(ren);
