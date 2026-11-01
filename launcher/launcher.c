@@ -202,20 +202,31 @@ int main(int argc, char **argv) {
     /* Find the project root (the folder that holds games/ and roms/) even if
        the launcher is invoked from inside launcher/. */
     char cand[512];
-    const char *tries[4] = { ".", "..", "..\\..", NULL };
+    const char *tries[8] = { ".", "..", "..\\..", NULL };
+    /* also try the exe's own dir and the known project root */
+    char exe[512]; GetModuleFileNameA(NULL, exe, sizeof(exe));
+    char *sep = strrchr(exe, '\\'); if (sep) *sep = 0;
     for (int t = 0; tries[t]; t++) {
-      snprintf(cand, sizeof(cand), "%s\\games", tries[t]);
       DWORD attr = GetFileAttributesA(cand);
+      /* build cand */
+      snprintf(cand, sizeof(cand), "%s\\games", tries[t]);
+      attr = GetFileAttributesA(cand);
       if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY)) {
         snprintf(g_workdir, sizeof(g_workdir), "%s", tries[t]);
         break;
       }
     }
     if (!g_workdir[0]) {
-      /* fall back to the exe's own directory */
-      char exe[512]; GetModuleFileNameA(NULL, exe, sizeof(exe));
-      char *sep = strrchr(exe, '\\'); if (sep) *sep = 0;
-      snprintf(g_workdir, sizeof(g_workdir), "%s", exe);
+      /* try exe's own dir */
+      snprintf(cand, sizeof(cand), "%s\\games", exe);
+      DWORD attr = GetFileAttributesA(cand);
+      if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY)) {
+        snprintf(g_workdir, sizeof(g_workdir), "%s", exe);
+      }
+    }
+    if (!g_workdir[0]) {
+      /* last resort: known project root */
+      snprintf(g_workdir, sizeof(g_workdir), "C:\\Users\\ThinkPad\\Documents\\Nueva carpeta\\sonic-decompiled-origins");
     }
     /* normalize to absolute */
     char abs[512];
