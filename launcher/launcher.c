@@ -136,7 +136,7 @@ static void launch(const struct game *g) {
   }
 
   char exe[512];
-  snprintf(exe, sizeof(exe), "%s%s", g->binary, EXE_SUFFIX);
+  snprintf(exe, sizeof(exe), "%s\\%s%s", g_workdir[0] ? g_workdir : ".", g->binary, EXE_SUFFIX);
 
   char abs_exe[512];
   char abs_rom[512];
@@ -144,7 +144,11 @@ static void launch(const struct game *g) {
 
 #ifdef _WIN32
   if (!_fullpath(abs_exe, exe, sizeof(abs_exe))) { if (lg) { fprintf(lg, "fullpath FAIL exe=%s\n", exe); fclose(lg); } return; }
-  if (!_fullpath(abs_rom, g->rom, sizeof(abs_rom))) { if (lg) { fprintf(lg, "fullpath FAIL rom=%s\n", g->rom); fclose(lg); } return; }
+  {
+    char rompath[512];
+    snprintf(rompath, sizeof(rompath), "%s\\%s", g_workdir[0] ? g_workdir : ".", g->rom);
+    if (!_fullpath(abs_rom, rompath, sizeof(abs_rom))) { if (lg) { fprintf(lg, "fullpath FAIL rom=%s\n", g->rom); fclose(lg); } return; }
+  }
   char cmdline[1024];
   if (g->args && g->args[0]) {
     snprintf(cmdline, sizeof(cmdline), "%s \"%s\"", g->args, abs_rom);
