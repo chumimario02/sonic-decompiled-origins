@@ -237,3 +237,15 @@ funciones ejecutadas (`crash_report_recent_blocks`). Muestrear desde
 `glue_check_vblank` (no desde el servicio de VBlank) es lo que hace que se vea
 codigo del juego y no el handler de VBlank. Un bucle de espera aparece como un
 punado de direcciones repitiendose.
+
+### El juego ya no muere al pisar datos
+
+`m68k_illegal_trap` hacia `abort()`. Como el codigo generado emite la llamada
+inmediatamente antes de un `return`, basta con registrarla y volver: la funcion
+apestosa se desenrolla y el juego sigue (con glitches visuales como mucho).
+`GENESIS_TRAP_ABORT=1` restaura el aborto duro para depurar.
+
+Ojo: la primera limpieza de tablas se revirtio porque el filtro "destino dentro
+de una tabla" usaba `longitud = primera_entrada/2`, y eso sobreestima cuando la
+primera entrada apunta lejos. Borro rutinas reales (agua, boosters, plataformas).
+El arreglo bueno es el del motor: ignorar solo las entradas con offset 0.
