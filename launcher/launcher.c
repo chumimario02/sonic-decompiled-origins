@@ -178,7 +178,7 @@ static void launch(const struct game *g) {
 
   const char *cwd = (g->cwd && g->cwd[0]) ? g->cwd : (g_workdir[0] ? g_workdir : NULL);
   char abs_cwd[512];
-  if (cwd) {
+  if (cwd && g->cwd && g->cwd[0]) {
     snprintf(abs_cwd, sizeof(abs_cwd), "%s\\%s", g_workdir[0] ? g_workdir : ".", cwd);
     char tmp[512];
     if (_fullpath(tmp, abs_cwd, sizeof(tmp))) snprintf(abs_cwd, sizeof(abs_cwd), "%s", tmp);
