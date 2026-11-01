@@ -43,7 +43,9 @@ struct game {
 };
 
 static const struct game games[] = {
+  { "SONIC 1", "RECOMP", "games/sonic1",        "roms/sonic1.bin",   "",         "MEGA DRIVE", NULL },
   { "SONIC 1", "RSDK",   "games/sonic1rsdk/RSDKv4", "games/sonic1rsdk/Data.rsdk", "usingCWD=true", "SEGA CD", "games/sonic1rsdk" },
+  { "SONIC 2", "RECOMP", "games/sonic2",        "roms/sonic2.bin",   "",         "MEGA DRIVE", NULL },
   { "SONIC 2", "RSDK",   "games/sonic2rsdk/RSDKv4", "games/sonic2rsdk/Data.rsdk", "usingCWD=true", "SEGA CD", "games/sonic2rsdk" },
   { "SONIC 3 & K", "RECOMP", "games/s3k",      "roms/s3k.bin",      "",         "MEGA DRIVE", NULL },
   { "SONIC SMS",   "RECOMP", "games/sonicsms", "roms/sonicsms.sms", "--window 3", "MASTER SYSTEM", NULL },
@@ -255,17 +257,19 @@ int main(int argc, char **argv) {
     }
   }
 
-  /* Two-level menu: first pick the FAMILY (RECOMP or RSDK), then the game. */
-  static const char *families[] = { "RECOMPILACION", "RSDK" };
-  static const int n_families = 2;
+  /* Two-level menu: first pick the game, then (if it has multiple versions)
+     pick RECOMP vs RSDK. Single-version games launch directly. */
+  static const char *game_names[] = {
+    "SONIC 1", "SONIC 2", "SONIC 3 & K", "SONIC SMS", "SONIC CD"
+  };
+  static const int game_first[] = { 0, 2, 4, 5, 6 };
+  static const int game_count_v[] = { 2, 2, 1, 1, 1 };
+  static const int n_games = 5;
 
-  int level = 0;       /* 0 = family, 1 = game */
-  int sel_fam = 0;
+  int level = 0;       /* 0 = game, 1 = version */
   int sel_game = 0;
+  int sel_ver = 0;
   int running = 1;
-
-  /* helper: count games in a family */
-  /* (computed on the fly below) */
 
   while (running) {
     SDL_Event ev;
@@ -275,25 +279,26 @@ int main(int argc, char **argv) {
       } else if (ev.type == SDL_KEYDOWN) {
         if (level == 0) {
           switch (ev.key.keysym.sym) {
-          case SDLK_UP:    sel_fam = (sel_fam + n_families - 1) % n_families; break;
-          case SDLK_DOWN:  sel_fam = (sel_fam + 1) % n_families; break;
+          case SDLK_UP:    sel_game = (sel_game + n_games - 1) % n_games; break;
+          case SDLK_DOWN:  sel_game = (sel_game + 1) % n_games; break;
           case SDLK_RETURN:
-          case SDLK_SPACE: level = 1; sel_game = 0; break;
+          case SDLK_SPACE:
+            if (game_count_v[sel_game] == 1) {
+              launch(&games[game_first[sel_game]]);
+            } else {
+              level = 1; sel_ver = 0;
+            }
+            break;
           case SDLK_ESCAPE: running = 0; break;
           default: break;
           }
         } else {
-          /* count games in this family */
-          int cnt = 0;
-          for (int i = 0; i < game_count; i++) if (games[i].version && strcmp(games[i].version, sel_fam == 0 ? "RECOMP" : "RSDK") == 0) cnt++;
-          /* build index list */
-          int idxs[8]; int k = 0;
-          for (int i = 0; i < game_count; i++) if (games[i].version && strcmp(games[i].version, sel_fam == 0 ? "RECOMP" : "RSDK") == 0) { idxs[k++] = i; }
+          int nver = game_count_v[sel_game];
           switch (ev.key.keysym.sym) {
-          case SDLK_UP:    sel_game = (sel_game + cnt - 1) % cnt; break;
-          case SDLK_DOWN:  sel_game = (sel_game + 1) % cnt; break;
+          case SDLK_UP:    sel_ver = (sel_ver + nver - 1) % nver; break;
+          case SDLK_DOWN:  sel_ver = (sel_ver + 1) % nver; break;
           case SDLK_RETURN:
-          case SDLK_SPACE: launch(&games[idxs[sel_game]]); break;
+          case SDLK_SPACE: launch(&games[game_first[sel_game] + sel_ver]); break;
           case SDLK_ESCAPE: level = 0; break;
           default: break;
           }
@@ -301,19 +306,21 @@ int main(int argc, char **argv) {
       } else if (ev.type == SDL_CONTROLLERBUTTONDOWN) {
         if (level == 0) {
           switch (ev.cbutton.button) {
-          case SDL_CONTROLLER_BUTTON_DPAD_UP:   sel_fam = (sel_fam + n_families - 1) % n_families; break;
-          case SDL_CONTROLLER_BUTTON_DPAD_DOWN: sel_fam = (sel_fam + 1) % n_families; break;
-          case SDL_CONTROLLER_BUTTON_A:         level = 1; sel_game = 0; break;
-          case SDL_CONTROLLER_BUTTON_B:         running = 0; break;
+          case SDL_CONTROLLER_BUTTON_DPAD_UP:   sel_game = (sel_game + n_games - 1) % n_games; break;
+          case SDL_CONTROLLER_BUTTON_DPAD_DOWN: sel_game = (sel_game + 1) % n_games; break;
+          case SDL_CONTROLLER_BUTTON_A:
+            if (game_count_v[sel_game] == 1) launch(&games[game_first[sel_game]]);
+            else { level = 1; sel_ver = 0; }
+            break;
+          case SDL_CONTROLLER_BUTTON_B: running = 0; break;
           default: break;
           }
         } else {
-          int cnt = 0; int idxs[8]; int k = 0;
-          for (int i = 0; i < game_count; i++) if (games[i].version && strcmp(games[i].version, sel_fam == 0 ? "RECOMP" : "RSDK") == 0) { idxs[k++] = i; cnt++; }
+          int nver = game_count_v[sel_game];
           switch (ev.cbutton.button) {
-          case SDL_CONTROLLER_BUTTON_DPAD_UP:   sel_game = (sel_game + cnt - 1) % cnt; break;
-          case SDL_CONTROLLER_BUTTON_DPAD_DOWN: sel_game = (sel_game + 1) % cnt; break;
-          case SDL_CONTROLLER_BUTTON_A:         launch(&games[idxs[sel_game]]); break;
+          case SDL_CONTROLLER_BUTTON_DPAD_UP:   sel_ver = (sel_ver + nver - 1) % nver; break;
+          case SDL_CONTROLLER_BUTTON_DPAD_DOWN: sel_ver = (sel_ver + 1) % nver; break;
+          case SDL_CONTROLLER_BUTTON_A:         launch(&games[game_first[sel_game] + sel_ver]); break;
           case SDL_CONTROLLER_BUTTON_B:        level = 0; break;
           default: break;
           }
@@ -333,31 +340,38 @@ int main(int argc, char **argv) {
 
     SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
     if (level == 0) {
-      draw_text(ren, 40, 80, 1, "ELIGE TIPO. FLECHAS: ELEGIR   ENTER: OK   ESC: SALIR");
+      draw_text(ren, 40, 80, 1, "ELIGE JUEGO. ENTER: ELEGIR   ESC: SALIR");
     } else {
       char hdr[64];
-      snprintf(hdr, sizeof(hdr), "%s - ELIGE JUEGO", families[sel_fam]);
+      snprintf(hdr, sizeof(hdr), "%s - ELIGE VERSION (ENTER: JUGAR, ESC: VOLVER)", game_names[sel_game]);
       draw_text(ren, 40, 80, 1, hdr);
     }
 
     int y = 120;
     if (level == 0) {
-      for (int i = 0; i < n_families; i++) {
-        if (i == sel_fam) SDL_SetRenderDrawColor(ren, 0xff, 0xff, 0xff, 255);
+      for (int i = 0; i < n_games; i++) {
+        const int ok = game_binary_exists(games[game_first[i]].binary) && file_exists(games[game_first[i]].rom);
+        if (i == sel_game) SDL_SetRenderDrawColor(ren, 0xff, 0xff, 0xff, 255);
         else SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
-        draw_text(ren, 60, y, 2, families[i]);
+        char line[64];
+        snprintf(line, sizeof(line), "%s%s", game_names[i], (game_count_v[i] > 1) ? "  >" : "");
+        draw_text(ren, 60, y, 2, line);
+        if (!ok) {
+          SDL_SetRenderDrawColor(ren, 0xff, 0x40, 0x40, 255);
+          draw_text(ren, 320, y, 1, "(FALTA ROM O JUEGO)");
+        }
         y += 40;
       }
     } else {
-      /* build index list */
-      int cnt = 0; int idxs[8];
-      for (int i = 0; i < game_count; i++) if (games[i].version && strcmp(games[i].version, sel_fam == 0 ? "RECOMP" : "RSDK") == 0) { idxs[cnt++] = i; }
-      for (int v = 0; v < cnt; v++) {
-        const struct game *g = &games[idxs[v]];
+      int first = game_first[sel_game];
+      int nver = game_count_v[sel_game];
+      for (int v = 0; v < nver; v++) {
+        const struct game *g = &games[first + v];
         const int ok = game_binary_exists(g->binary) && file_exists(g->rom);
-        if (v == sel_game) SDL_SetRenderDrawColor(ren, 0xff, 0xff, 0xff, 255);
+        if (v == sel_ver) SDL_SetRenderDrawColor(ren, 0xff, 0xff, 0xff, 255);
         else SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
-        draw_text(ren, 60, y, 2, g->title);
+        const char *verlabel = g->version ? g->version : "UNICO";
+        draw_text(ren, 60, y, 2, verlabel);
         SDL_SetRenderDrawColor(ren, 0x80, 0x88, 0x98, 255);
         char hint[80];
         snprintf(hint, sizeof(hint), "%s  (%s)", g->hint, g->binary);
@@ -377,6 +391,8 @@ int main(int argc, char **argv) {
   }
 
   if (pad) SDL_GameControllerClose(pad);
+
+    if (pad) SDL_GameControllerClose(pad);
 
     if (pad) SDL_GameControllerClose(pad);
 
