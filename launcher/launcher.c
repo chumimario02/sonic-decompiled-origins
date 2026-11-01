@@ -174,8 +174,8 @@ static void launch(const struct game *g) {
   }
 
   const char *cwd = (g->cwd && g->cwd[0]) ? g->cwd : (g_workdir[0] ? g_workdir : NULL);
-  BOOL ok = CreateProcessA(abs_exe, fullcmd, NULL, NULL, FALSE, 0, NULL,
-                           cwd, &si, &pi);
+  BOOL ok = CreateProcessA(abs_exe, fullcmd, NULL, NULL, FALSE, CREATE_NO_WINDOW,
+                           NULL, cwd, &si, &pi);
   if (ok) {
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
