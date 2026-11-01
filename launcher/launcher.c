@@ -38,14 +38,17 @@ struct game {
   const char *rom;
   const char *args;
   const char *hint;
+  const char *cwd; /* per-game working dir (NULL = project root) */
 };
 
 static const struct game games[] = {
-  { "SONIC 1",        "games/sonic1",   "roms/sonic1.bin",   "",         "MEGA DRIVE" },
-  { "SONIC 2",        "games/sonic2",   "roms/sonic2.bin",   "",         "MEGA DRIVE" },
-  { "SONIC CD",       "games/soniccd/SonicCD", "games/soniccd/Data.rsdk", "", "SEGA CD" },
-  { "SONIC 3 & K",    "games/s3k",      "roms/s3k.bin",      "",         "MEGA DRIVE" },
-  { "SONIC SMS",      "games/sonicsms", "roms/sonicsms.sms", "--window 3", "MASTER SYSTEM" },
+  { "SONIC 1",        "games/sonic1",   "roms/sonic1.bin",   "",         "MEGA DRIVE", NULL },
+  { "SONIC 2",        "games/sonic2",   "roms/sonic2.bin",   "",         "MEGA DRIVE", NULL },
+  { "SONIC CD",       "games/soniccd/SonicCD", "games/soniccd/Data.rsdk", "", "SEGA CD", NULL },
+  { "SONIC 1 RSDK",  "games/sonic1rsdk/RSDKv4", "games/sonic1rsdk/Data.rsdk", "usingCWD=true", "SEGA CD", "games/sonic1rsdk" },
+  { "SONIC 2 RSDK",  "games/sonic2rsdk/RSDKv4", "games/sonic2rsdk/Data.rsdk", "usingCWD=true", "SEGA CD", "games/sonic2rsdk" },
+  { "SONIC 3 & K",    "games/s3k",      "roms/s3k.bin",      "",         "MEGA DRIVE", NULL },
+  { "SONIC SMS",      "games/sonicsms", "roms/sonicsms.sms", "--window 3", "MASTER SYSTEM", NULL },
 };
 static const int game_count = (int)(sizeof(games) / sizeof(games[0]));
 
@@ -169,11 +172,11 @@ static void launch(const struct game *g) {
   if (strstr(g->binary, "sonic2") != NULL) {
     SetEnvironmentVariableA("GENESIS_POKE", "FFFFD0=0100");
     SetEnvironmentVariableA("GENESIS_POKE_FRAMES", "3000");
-    SetEnvironmentVariableA("GENESIS_DISABLE_HBLANK", "1");
   }
 
+  const char *cwd = (g->cwd && g->cwd[0]) ? g->cwd : (g_workdir[0] ? g_workdir : NULL);
   BOOL ok = CreateProcessA(abs_exe, fullcmd, NULL, NULL, FALSE, 0, NULL,
-                           g_workdir[0] ? g_workdir : NULL, &si, &pi);
+                           cwd, &si, &pi);
   if (ok) {
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
@@ -223,6 +226,8 @@ int main(int argc, char **argv) {
 #else
   if (!realpath(".", g_workdir)) g_workdir[0] = 0;
 #endif
+
+  FILE *dbg = fopen("launcher.log", "a");
 
   if (argc >= 3 && strcmp(argv[1], "--launch") == 0) {
     int idx = atoi(argv[2]);
