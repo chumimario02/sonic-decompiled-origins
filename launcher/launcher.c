@@ -157,6 +157,15 @@ static void launch(const struct game *g) {
   si.cb = sizeof(si);
   memset(&pi, 0, sizeof(pi));
 
+  /* Per-game engine env. Sonic 2: enable the level-select flag in work RAM
+   * ($FFFFD0, the .w operand $FFD0 sign-extends to that) so the title screen
+   * accepts A+Start without the Options > Sound Test cheat. The engine reads
+   * GENESIS_POKE in its runner (see README). */
+  if (strstr(g->binary, "sonic2") != NULL) {
+    SetEnvironmentVariableA("GENESIS_POKE", "FFFFD0=0100");
+    SetEnvironmentVariableA("GENESIS_POKE_FRAMES", "3000");
+  }
+
   BOOL ok = CreateProcessA(abs_exe, fullcmd, NULL, NULL, FALSE, 0, NULL,
                            g_workdir[0] ? g_workdir : NULL, &si, &pi);
   if (ok) {

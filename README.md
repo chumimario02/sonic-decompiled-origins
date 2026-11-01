@@ -193,3 +193,47 @@ Empaquetado en `games/soniccd/`: `SonicCD.exe` + `Data.rsdk` + `SDL2.dll`,
 `glew32.dll`, `libogg-0`, `libvorbis-0`, `libvorbisfile-3`, `libtheora-1`,
 `libtheoradec-2`, `libtheoraenc-2`, `libwinpthread-1`, `libgcc_s_seh-1`,
 `libstdc++-6`.
+
+### Sonic 2: el bug de las tablas (por que se veia "sucio")
+
+Sintoma: logos y titulo con basura, sprites corruptos, y crashes
+`[ILLEGAL] ... opcode=FFA8` en la Special Stage.
+
+Causa: las tablas de estados de Sonic 2 son `dc.w Handler-Tbl`, y las entradas
+de relleno valen `$0000`. Como `Tbl + 0 == Tbl`, el enumerador de tablas
+registraba **la propia tabla** como destino de codigo. El recompilador emitia
+los bytes de la tabla como instrucciones y, si un objeto caia ahi, caminaba la
+tabla hasta dar con una palabra de datos como opcode.
+
+Dos arreglos:
+
+1. **Datos**: 349 + 283 direcciones que caian dentro de una tabla se quitaron
+   de `game.toml` y de `sonic2.disasm_labels.toml`, y las 349 del toml se
+   anadieron a `[functions].blacklist`. (El fichero de etiquetas se fusiona por
+   separado: limpiar solo el `game.toml` no bastaba.)
+2. **Motor** (`code_generator.c`): los dos enumeradores de tablas de offsets
+   ahora ignoran las entradas con offset `0` (`if (off == 0) continue;`), asi
+   que el fallo no puede reaparecer en ningun juego.
+
+Efecto secundario del arreglo: el codigo fantasma escribia basura en la VDP.
+Al quitarlo, el logo de SEGA, la pantalla de titulo y los sprites se ven limpios.
+
+### Level Select sin pasar por Options
+
+El flag vive en RAM en `$FFFFD0` (el operando `.w` `$FFD0` se extiende con
+signo: `$FFFFD0`, no `$00FFD0`). El motor tiene un poke de RAM:
+
+```
+GENESIS_POKE=FFFFD0=0100 GENESIS_POKE_FRAMES=3000
+```
+
+El launcher lo aplica automaticamente al lanzar SONIC 2. En el titulo hay que
+mantener **A** (tecla Z) y pulsar **Start** (Enter).
+
+### Diagnosticar cuelgues (no crashes)
+
+`GENESIS_PC_LOG=N` imprime cada N*10000 instrucciones el anillo de ultimas
+funciones ejecutadas (`crash_report_recent_blocks`). Muestrear desde
+`glue_check_vblank` (no desde el servicio de VBlank) es lo que hace que se vea
+codigo del juego y no el handler de VBlank. Un bucle de espera aparece como un
+punado de direcciones repitiendose.
