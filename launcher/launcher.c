@@ -195,7 +195,26 @@ static void launch(const struct game *g) {
 
 int main(int argc, char **argv) {
 #ifdef _WIN32
-  if (!_fullpath(g_workdir, ".", sizeof(g_workdir))) g_workdir[0] = 0;
+  {
+    /* Find the project root (the folder that holds games/ and roms/) even if
+       the launcher is invoked from inside launcher/. */
+    char cand[512];
+    const char *tries[4] = { ".", "..", "..\\..", NULL };
+    for (int t = 0; tries[t]; t++) {
+      snprintf(cand, sizeof(cand), "%s\\games", tries[t]);
+      FILE *f = fopen(cand, "rb");
+      if (f) { fclose(f); snprintf(g_workdir, sizeof(g_workdir), "%s", tries[t]); break; }
+    }
+    if (!g_workdir[0]) {
+      /* fall back to the exe's own directory */
+      char exe[512]; GetModuleFileNameA(NULL, exe, sizeof(exe));
+      char *sep = strrchr(exe, '\\'); if (sep) *sep = 0;
+      snprintf(g_workdir, sizeof(g_workdir), "%s", exe);
+    }
+    /* normalize to absolute */
+    char abs[512];
+    if (_fullpath(abs, g_workdir, sizeof(abs))) snprintf(g_workdir, sizeof(g_workdir), "%s", abs);
+  }
 #else
   if (!realpath(".", g_workdir)) g_workdir[0] = 0;
 #endif
