@@ -85,13 +85,13 @@ Todo el mÃ©rito de las recompilaciones es de **mstan** y del proyecto
 |---|---|---|
 | **Sonic 1** | ? funciona | compilado con MSVC + SDK |
 | **Sonic SMS** | ? funciona | necesita `--window 3` |
-| **Sonic 3 & K** | ?? compila | rechaza la ROM si el CRC32 no es `63522553` |
-| **Sonic 2** | ?? no compila | submódulos rotos en el repo original |
+| **Sonic 3 & K** | ? funciona | rechaza la ROM si el CRC32 no es `63522553` |
+| **Sonic 2** | ? funciona | Emerald Hill Act 1 y 2 completos, jefe incluido |
 
-### Receta que funcionó (MSVC)
+### Receta que funcionï¿½ (MSVC)
 
 1. Instalar **Visual Studio Build Tools** con el workload C++ y el **Windows SDK**.
-2. Configurar con Ninja + `cl` dentro de `VsDevCmd.bat`, añadiendo a mano
+2. Configurar con Ninja + `cl` dentro de `VsDevCmd.bat`, aï¿½adiendo a mano
    `INCLUDE`, `LIB` y el `bin\x64` del SDK (el SDK no se registra solo).
 3. `SDL2_DIR` apuntando al paquete VC que trae el repo de Sonic 1
    (`segagenesisrecomp/runner/external/SDL2/SDL2-2.28.5/cmake`).
@@ -104,42 +104,49 @@ Todo el mÃ©rito de las recompilaciones es de **mstan** y del proyecto
 
 - **Sonic 2**: el repo apunta a un commit de `recomp-ui` que ya no existe en GitHub;
   se sustituye por el de Sonic 1 y se usa su motor con
-  `-DGENESIS_RECOMP_ROOT`. Además hay que crear a mano las etiquetas
+  `-DGENESIS_RECOMP_ROOT`. Ademï¿½s hay que crear a mano las etiquetas
   `label_XXXX` que faltan en el C generado (huecos del recompilador).
-- **CRC de la ROM**: el motor rechaza ROMs que no son la revisión exacta. Como el
+- **CRC de la ROM**: el motor rechaza ROMs que no son la revisiï¿½n exacta. Como el
   C se genera **desde nuestra propia ROM**, se cambia ese rechazo por un aviso en
   `segagenesisrecomp/runner/main.c` (bloque `expected_rom_crc32`).
 - **Sonic 3 & K**: compila solo la variante combinada
   (`--target Sonic3KRecomp`); las variantes S3 y S&K piden sus propias ROMs.
-### Sonic 2: siguiente paso (pendiente)
+### Sonic 2: como se resolvio (resumen)
 
-Compila y arranca, pero la pantalla sale negra. El runtime deja el diagnóstico en:
+El motor de recompilacion estatica no ve todos los destinos de salto de las
+maquinas de estado de los objetos (patron `move.w Tbl(pc,dN.w),dM` +
+`jmp/jsr Tbl(pc,dM.w)`). Cada destino no visto se reportaba en tiempo de
+ejecucion como `interior-label miss` y el objeto se quedaba "colgado"
+(badniks sin IA, jefes sin secuencia de derrota, colisiones raras).
 
-```
-SonicTheHedgehog2Recomp/build-msvc/interior_label_misses.toml
-```
+Tres arreglos, de menos a mas general:
 
-Con estas 5 direcciones (destinos de tabla de salto dentro de funciones):
+1. **Parche de motor** (`profiles/genesis/code_generator.c`): tras ordenar las
+   direcciones de instruccion se descartan las que caen **a mitad** de otra
+   instruccion ya decodificada. Son semillas fantasma de un desensamblado de
+   otra revision; emitirlas decodificaba los bytes de un operando como opcode
+   (p.ej. `$F66A`) y provocaba `[ILLEGAL]` al llegar ahi por flujo lineal.
 
-```
-0x000C62 (en $000408)
-0x00159E (en $001554)
-0x001594 (en $001554)
-0x0005E4 (en $000408)
-0x03A1CC (en $015FCC)
-```
+2. **Auto-descubrimiento** (`[game] jump_table_autodiscovery = true`) para las
+   tablas `[[jump_table]]` que el usuario no declara a mano.
 
-`dispatch_misses.toml` está vacío (bien: no faltan funciones completas).
-Avance: se añadieron las 5 direcciones como `extra_seeds` en el `[functions]`
-del `game.toml` de Sonic 2. Resultado: el miss `$000C62` se resolvió; quedan
-4 ($00159E, $001594 en $001554; $0005E4 en $000408; $03A1CC en $015FCC).
-ESTADO 2026-10-31 (fin de sesión): suena el grito SEGA, los 3 destellos y la
-música del título. Se congela en el frame ~575 justo antes de dibujar el título,
-por el miss `$000654` (in $000408). Datos del bucle:
-- `$000654` en [functions].extra  -> ILEGAL pc=00065E (ejecuta DATA: opcode F614).
-- `$000654` solo en extra_seeds  -> sin efecto (sigue el miss).
-- Mejor build hasta ahora: `$00061E` en [functions].extra, `$000654` fuera.
-Próximo paso (Ghidra): desensamblar $000620-$0006A0 de sonic2.bin (VBlank) para
-ver la forma del JMP y la tabla en $000654; probablemente sea otro formato de
-tabla (no (d8,PC,Xn)) o una secuencia que el probe del codegen no reconoce.
-También probar: declararla como [[jump_table]] en sonic2.disasm_jumptables.toml.
+3. **Escaneo estatico de tablas** (`scripts/scan_tables.py`, ver abajo): recorre
+   el ROM buscando `4E FB` (`jmp`) y `4E BB` (`jsr`) con EA `(d8,PC,Dn.w)`,
+   calcula la base de la tabla a partir de la palabra de extension y enumera
+   todos los destinos. En Sonic 2 salen **385 tablas / 2530 destinos**.
+
+Con las 1518 etiquetas `Obj*` del desensamblado + los 2530 destinos de tabla,
+el `game.toml` acaba con ~3900 entradas en `[functions].extra` y `extra_seeds`.
+Resultado: Sonic y Tails jugables, badniks con IA, espiral de Emerald Hill,
+puentes, cartel de meta y jefe del Act 2 con su secuencia de derrota.
+
+Scripts del bucle (en `%TEMP%\opencode\`, no versionados):
+
+| Script | Para que |
+|---|---|
+| `add_misses.ps1 -ErrLog <log>` | vuelca los `interior-label miss` del log al `game.toml` |
+| `build-s2.ps1` | build en dos pasadas + parche `label_XXXX` + enlazado |
+| `scan_tables.py` | escaneo estatico de tablas `(d8,PC,Dn.w)` |
+
+Nota: el build regenera el C en cada cambio del `game.toml`, y eso borra las
+etiquetas `label_XXXX` insertadas a mano; por eso el build es de dos pasadas.
