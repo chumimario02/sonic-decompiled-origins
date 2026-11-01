@@ -287,10 +287,10 @@ int main(int argc, char **argv) {
         } else {
           /* count games in this family */
           int cnt = 0;
-          for (int i = 0; i < game_count; i++) if (games[i].version && strcmp(games[i].version, families[sel_fam] == 0 ? "RECOMP" : "RSDK") == 0) cnt++;
+          for (int i = 0; i < game_count; i++) if (games[i].version && strcmp(games[i].version, sel_fam == 0 ? "RECOMP" : "RSDK") == 0) cnt++;
           /* build index list */
           int idxs[8]; int k = 0;
-          for (int i = 0; i < game_count; i++) if (games[i].version && strcmp(games[i].version, families[sel_fam] == 0 ? "RECOMP" : "RSDK") == 0) { idxs[k++] = i; }
+          for (int i = 0; i < game_count; i++) if (games[i].version && strcmp(games[i].version, sel_fam == 0 ? "RECOMP" : "RSDK") == 0) { idxs[k++] = i; }
           switch (ev.key.keysym.sym) {
           case SDLK_UP:    sel_game = (sel_game + cnt - 1) % cnt; break;
           case SDLK_DOWN:  sel_game = (sel_game + 1) % cnt; break;
@@ -311,7 +311,7 @@ int main(int argc, char **argv) {
           }
         } else {
           int cnt = 0; int idxs[8]; int k = 0;
-          for (int i = 0; i < game_count; i++) if (games[i].version && strcmp(games[i].version, families[sel_fam] == 0 ? "RECOMP" : "RSDK") == 0) { idxs[k++] = i; cnt++; }
+          for (int i = 0; i < game_count; i++) if (games[i].version && strcmp(games[i].version, sel_fam == 0 ? "RECOMP" : "RSDK") == 0) { idxs[k++] = i; cnt++; }
           switch (ev.cbutton.button) {
           case SDL_CONTROLLER_BUTTON_DPAD_UP:   sel_game = (sel_game + cnt - 1) % cnt; break;
           case SDL_CONTROLLER_BUTTON_DPAD_DOWN: sel_game = (sel_game + 1) % cnt; break;
@@ -353,7 +353,7 @@ int main(int argc, char **argv) {
     } else {
       /* build index list */
       int cnt = 0; int idxs[8];
-      for (int i = 0; i < game_count; i++) if (games[i].version && strcmp(games[i].version, families[sel_fam] == 0 ? "RECOMP" : "RSDK") == 0) { idxs[cnt++] = i; }
+      for (int i = 0; i < game_count; i++) if (games[i].version && strcmp(games[i].version, sel_fam == 0 ? "RECOMP" : "RSDK") == 0) { idxs[cnt++] = i; }
       for (int v = 0; v < cnt; v++) {
         const struct game *g = &games[idxs[v]];
         const int ok = game_binary_exists(g->binary) && file_exists(g->rom);
