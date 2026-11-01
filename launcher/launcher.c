@@ -46,7 +46,6 @@ static const struct game games[] = {
   { "SONIC 1", "RSDK",   "games/sonic1rsdk/RSDKv4", "games/sonic1rsdk/Data.rsdk", "usingCWD=true", "GENESIS", "games/sonic1rsdk" },
   { "SONIC 2", "RSDK",   "games/sonic2rsdk/RSDKv4", "games/sonic2rsdk/Data.rsdk", "usingCWD=true", "GENESIS", "games/sonic2rsdk" },
   { "SONIC 3 & K", "RECOMP", "games/s3k",      "roms/s3k.bin",      "",         "GENESIS", NULL },
-  { "SONIC SMS",   "RECOMP", "games/sonicsms", "roms/sonicsms.sms", "--window 3", "MASTER SYSTEM", NULL },
   { "SONIC CD",    "RSDK",   "games/soniccd/SonicCD", "games/soniccd/Data.rsdk", "", "SEGA CD", "games/soniccd" },
 };
 static const int game_count = (int)(sizeof(games) / sizeof(games[0]));
