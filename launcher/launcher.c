@@ -177,6 +177,13 @@ static void launch(const struct game *g) {
   }
 
   const char *cwd = (g->cwd && g->cwd[0]) ? g->cwd : (g_workdir[0] ? g_workdir : NULL);
+  char abs_cwd[512];
+  if (cwd) {
+    snprintf(abs_cwd, sizeof(abs_cwd), "%s\\%s", g_workdir[0] ? g_workdir : ".", cwd);
+    char tmp[512];
+    if (_fullpath(tmp, abs_cwd, sizeof(tmp))) snprintf(abs_cwd, sizeof(abs_cwd), "%s", tmp);
+    cwd = abs_cwd;
+  }
   BOOL ok = CreateProcessA(abs_exe, fullcmd, NULL, NULL, FALSE, CREATE_NO_WINDOW,
                            NULL, cwd, &si, &pi);
   if (ok) {
