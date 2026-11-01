@@ -267,6 +267,7 @@ int main(int argc, char **argv) {
                                      WINDOW_W, WINDOW_H, SDL_WINDOW_SHOWN);
   SDL_Renderer *ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if (!ren) ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE);
+  SDL_RenderSetLogicalSize(ren, WINDOW_W, WINDOW_H);
 
   SDL_GameController *pad = NULL;
   for (int i = 0; i < SDL_NumJoysticks(); i++) {
