@@ -43,6 +43,7 @@ struct game {
 static const struct game games[] = {
   { "SONIC 1",        "games/sonic1",   "roms/sonic1.bin",   "",         "MEGA DRIVE" },
   { "SONIC 2",        "games/sonic2",   "roms/sonic2.bin",   "",         "MEGA DRIVE" },
+  { "SONIC CD",       "games/soniccd/SonicCD", "games/soniccd/Data.rsdk", "", "SEGA CD" },
   { "SONIC 3 & K",    "games/s3k",      "roms/s3k.bin",      "",         "MEGA DRIVE" },
   { "SONIC SMS",      "games/sonicsms", "roms/sonicsms.sms", "--window 3", "MASTER SYSTEM" },
 };

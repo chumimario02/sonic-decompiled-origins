@@ -87,6 +87,7 @@ Todo el mérito de las recompilaciones es de **mstan** y del proyecto
 | **Sonic SMS** | ? funciona | necesita `--window 3` |
 | **Sonic 3 & K** | ? funciona | rechaza la ROM si el CRC32 no es `63522553` |
 | **Sonic 2** | ? funciona | Emerald Hill Act 1 y 2 completos, jefe incluido |
+| **Sonic CD** | ? funciona | decomp RSDKv3 nativo (no emulador); necesita `Data.rsdk` |
 
 ### Receta que funcion� (MSVC)
 
@@ -150,3 +151,45 @@ Scripts del bucle (en `%TEMP%\opencode\`, no versionados):
 
 Nota: el build regenera el C en cada cambio del `game.toml`, y eso borra las
 etiquetas `label_XXXX` insertadas a mano; por eso el build es de dos pasadas.
+
+---
+
+### Sonic CD (decomp RSDKv3, aparte de los recompilados)
+
+Sonic CD **no** va por recompilacion estatica: el Mega CD tiene un segundo
+68000 y el chip ASIC de escalado, y el motor de mstan no lo soporta. Se usa el
+decomp nativo en C++ de [RSDKv3-Decompilation](https://github.com/RSDKModding/RSDKv3-Decompilation),
+que ademas es el camino bueno para Android y Raspberry Pi (probado en ARM por
+PortMaster).
+
+Necesita `Data.rsdk` (assets del Sonic CD de 2011: Steam, Sonic Origins o el
+APK de Android renombrando `Data.rsdk.xmf` -> `Data.rsdk`). **El `.chd` de
+Mega CD NO sirve**: es otro formato de datos.
+
+Receta en Windows con MSYS2/MinGW (mas ligero que vcpkg):
+
+```bash
+# dependencias
+pacman -S --needed mingw-w64-x86_64-glew mingw-w64-x86_64-libogg \
+  mingw-w64-x86_64-libvorbis mingw-w64-x86_64-libtheora \
+  mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja
+
+# configurar (cmake-shims/ aporta los .cmake de Vorbis y Theora,
+# que MSYS2 no trae para las libs de sonido)
+cmake -B build-mingw -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ \
+  -DCMAKE_PREFIX_PATH="$PWD/cmake-shims;C:/msys64/mingw64"
+
+cmake --build build-mingw
+```
+
+Dos parches necesarios (ya aplicados en el clon local):
+
+1. `platforms/windows.cmake`: `/subsystem:windows` (MSVC) -> `-mwindows` en GCC.
+2. `RSDKv3/fcaseopen.c`: incluir `<direct.h>` en `_WIN32` para que `chdir` este
+   declarado en MinGW (GCC 14+ lo trata como error).
+
+Empaquetado en `games/soniccd/`: `SonicCD.exe` + `Data.rsdk` + `SDL2.dll`,
+`glew32.dll`, `libogg-0`, `libvorbis-0`, `libvorbisfile-3`, `libtheora-1`,
+`libtheoradec-2`, `libtheoraenc-2`, `libwinpthread-1`, `libgcc_s_seh-1`,
+`libstdc++-6`.

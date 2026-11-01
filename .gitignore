@@ -5,4 +5,8 @@ launcher/launcher
 launcher/launcher.exe
 launcher.log
 spawn.out
-*.o
+*.o# runtime files created by the games
+settings.ini
+UData.bin
+usage.txt
+*.srm
