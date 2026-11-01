@@ -279,6 +279,7 @@ int main(int argc, char **argv) {
   /* Flat menu: one entry per game. */
   int selected = 0;
   int running = 1;
+  int fullscreen = 0;
 
   while (running) {
     SDL_Event ev;
@@ -292,6 +293,10 @@ int main(int argc, char **argv) {
         case SDLK_RETURN:
         case SDLK_SPACE: launch(&games[selected]); break;
         case SDLK_ESCAPE: running = 0; break;
+        case SDLK_F11:
+          fullscreen = !fullscreen;
+          SDL_SetWindowFullscreen(win, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+          break;
         default: break;
         }
       } else if (ev.type == SDL_CONTROLLERBUTTONDOWN) {
