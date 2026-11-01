@@ -249,3 +249,17 @@ Ojo: la primera limpieza de tablas se revirtio porque el filtro "destino dentro
 de una tabla" usaba `longitud = primera_entrada/2`, y eso sobreestima cuando la
 primera entrada apunta lejos. Borro rutinas reales (agua, boosters, plataformas).
 El arreglo bueno es el del motor: ignorar solo las entradas con offset 0.
+
+### Sonic 2: el agua de Chemical Plant (y el HBlank)
+
+El efecto del agua en Chemical Plant es un **HBlank por línea**: el handler de
+HBlank (`$000F54`) cambia la paleta línea a línea para que el agua se vea
+morada. En hardware real funciona porque el CPU va línea a línea; nuestro motor
+renderiza la pantalla entera de golpe, así que el handler se queda esperando
+un flag que nunca cambia ? bucle infinito ? congelación.
+
+Arreglo: `GENESIS_DISABLE_HBLANK=1` hace que el handler vuelva inmediatamente
+(solo su cuerpo, no la entrega). El agua pierde el morado pero el nivel se pasa.
+El arranque sigue funcionando porque la entrega de la interrupción no se toca.
+
+El launcher aplica el flag automáticamente al lanzar SONIC 2.

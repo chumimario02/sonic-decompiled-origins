@@ -160,10 +160,14 @@ static void launch(const struct game *g) {
   /* Per-game engine env. Sonic 2: enable the level-select flag in work RAM
    * ($FFFFD0, the .w operand $FFD0 sign-extends to that) so the title screen
    * accepts A+Start without the Options > Sound Test cheat. The engine reads
-   * GENESIS_POKE in its runner (see README). */
+   * GENESIS_POKE in its runner (see README). Also disable the per-line HBlank
+   * handler, which busy-waits on the VDP H-blank flag and deadlocks under our
+   * per-line-whole renderer on the CPZ water effect - the water loses its
+   * purple shimmer but the level becomes playable. */
   if (strstr(g->binary, "sonic2") != NULL) {
     SetEnvironmentVariableA("GENESIS_POKE", "FFFFD0=0100");
     SetEnvironmentVariableA("GENESIS_POKE_FRAMES", "3000");
+    SetEnvironmentVariableA("GENESIS_DISABLE_HBLANK", "1");
   }
 
   BOOL ok = CreateProcessA(abs_exe, fullcmd, NULL, NULL, FALSE, 0, NULL,
