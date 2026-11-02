@@ -40,6 +40,28 @@ static const struct game games[] = {
 };
 static const int game_count = (int)(sizeof(games) / sizeof(games[0]));
 
+/* Category: 0 = Genesis / 16-bit (+Sega CD), 1 = Master System / Game Gear. */
+static const int game_cat[] = { 0, 0, 0, 0, 1, 1 };
+static const char *cat_names[] = { "GENESIS / 16-BIT", "SMS / GAME GEAR" };
+#define CAT_COUNT 2
+
+static int cat_first(int c) {
+  for (int i = 0; i < game_count; i++) if (game_cat[i] == c) return i;
+  return 0;
+}
+static int cat_count_of(int c) {
+  int n = 0;
+  for (int i = 0; i < game_count; i++) if (game_cat[i] == c) n++;
+  return n;
+}
+static int cat_step(int cur, int dir) {
+  for (int k = 1; k <= game_count; k++) {
+    int i = (cur + dir * k + game_count * 4) % game_count;
+    if (game_cat[i] == game_cat[cur]) return i;
+  }
+  return cur;
+}
+
 static char g_workdir[PATH_MAX];
 
 /* --- 5x7 bitmap font, uppercase only ------------------------------------- */
@@ -74,6 +96,14 @@ static const unsigned char font[][7] = {
   ['1' - 32] = {0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E},
   ['2' - 32] = {0x0E, 0x11, 0x01, 0x02, 0x04, 0x08, 0x1F},
   ['3' - 32] = {0x1F, 0x02, 0x04, 0x02, 0x01, 0x11, 0x0E},
+  ['4' - 32] = {0x02, 0x06, 0x0A, 0x12, 0x1F, 0x02, 0x02},
+  ['5' - 32] = {0x1F, 0x10, 0x1E, 0x01, 0x01, 0x11, 0x0E},
+  ['6' - 32] = {0x0E, 0x10, 0x1E, 0x11, 0x11, 0x11, 0x0E},
+  ['7' - 32] = {0x1F, 0x01, 0x02, 0x04, 0x08, 0x08, 0x08},
+  ['8' - 32] = {0x0E, 0x11, 0x11, 0x0E, 0x11, 0x11, 0x0E},
+  ['9' - 32] = {0x0E, 0x11, 0x11, 0x0F, 0x01, 0x01, 0x0E},
+  ['/' - 32] = {0x01, 0x01, 0x02, 0x04, 0x08, 0x10, 0x10},
+  [':' - 32] = {0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x0C, 0x00},
   ['&' - 32] = {0x0C, 0x12, 0x14, 0x08, 0x15, 0x12, 0x0D},
   ['-' - 32] = {0x00, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00},
   ['.' - 32] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0C},
@@ -218,8 +248,20 @@ int main(int argc, char **argv) {
     if (SDL_IsGameController(i)) { pad = SDL_GameControllerOpen(i); if (pad) break; }
 
   int selected = 0, running = 1, fullscreen = want_full;
+  int level = 0, sel_cat = 0;   /* 0 = category menu, 1 = game menu */
   int snap_done = 0;
   Uint32 lastNav = 0;
+
+  { /* dev/test: start directly on a given menu level */
+    const char *ml = getenv("SONIC_MENU_LEVEL");
+    if (ml) {
+      int l = atoi(ml);
+      if (l >= 0 && l <= 1) level = l;
+      const char *mc = getenv("SONIC_MENU_CAT");
+      if (mc) { int c = atoi(mc); if (c >= 0 && c < CAT_COUNT) sel_cat = c; }
+      if (level == 1) selected = cat_first(sel_cat);
+    }
+  }
 
   while (running) {
     SDL_Event ev;
@@ -227,16 +269,31 @@ int main(int argc, char **argv) {
       if (ev.type == SDL_QUIT) running = 0;
       else if (ev.type == SDL_KEYDOWN) {
         switch (ev.key.keysym.sym) {
-        case SDLK_UP:    selected = (selected + game_count - 1) % game_count; break;
-        case SDLK_DOWN:  selected = (selected + 1) % game_count; break;
+        case SDLK_UP:
+          if (level == 0) sel_cat = (sel_cat + CAT_COUNT - 1) % CAT_COUNT;
+          else selected = cat_step(selected, -1);
+          break;
+        case SDLK_DOWN:
+          if (level == 0) sel_cat = (sel_cat + 1) % CAT_COUNT;
+          else selected = cat_step(selected, +1);
+          break;
         case SDLK_RETURN:
           if (ev.key.keysym.mod & KMOD_ALT) {
             fullscreen = !fullscreen;
             SDL_SetWindowFullscreen(win, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
-          } else launch(&games[selected]);
+          } else if (level == 0) {
+            level = 1; selected = cat_first(sel_cat);
+          } else {
+            launch(&games[selected]);
+          }
           break;
-        case SDLK_SPACE: launch(&games[selected]); break;
-        case SDLK_ESCAPE: running = 0; break;
+        case SDLK_SPACE:
+          if (level == 0) { level = 1; selected = cat_first(sel_cat); }
+          else launch(&games[selected]);
+          break;
+        case SDLK_ESCAPE:
+          if (level == 1) level = 0; else running = 0;
+          break;
         default: break;
         }
       } else if (ev.type == SDL_CONTROLLERDEVICEADDED) {
@@ -248,22 +305,36 @@ int main(int argc, char **argv) {
       } else if (ev.type == SDL_CONTROLLERBUTTONDOWN) {
         switch (ev.cbutton.button) {
         case SDL_CONTROLLER_BUTTON_DPAD_UP:
-          selected = (selected + game_count - 1) % game_count; lastNav = SDL_GetTicks(); break;
+          if (level == 0) sel_cat = (sel_cat + CAT_COUNT - 1) % CAT_COUNT;
+          else selected = cat_step(selected, -1);
+          lastNav = SDL_GetTicks(); break;
         case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-          selected = (selected + 1) % game_count; lastNav = SDL_GetTicks(); break;
+          if (level == 0) sel_cat = (sel_cat + 1) % CAT_COUNT;
+          else selected = cat_step(selected, +1);
+          lastNav = SDL_GetTicks(); break;
         case SDL_CONTROLLER_BUTTON_A:
         case SDL_CONTROLLER_BUTTON_START:
-          launch(&games[selected]); break;
+          if (level == 0) { level = 1; selected = cat_first(sel_cat); }
+          else launch(&games[selected]);
+          break;
         case SDL_CONTROLLER_BUTTON_B:
         case SDL_CONTROLLER_BUTTON_BACK:
-          running = 0; break;
+          if (level == 1) level = 0; else running = 0;
+          break;
         default: break;
         }
       } else if (ev.type == SDL_CONTROLLERAXISMOTION) {
         Uint32 now = SDL_GetTicks();
         if (ev.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY && now - lastNav > 180) {
-          if (ev.caxis.value < -16000) { selected = (selected + game_count - 1) % game_count; lastNav = now; }
-          else if (ev.caxis.value > 16000) { selected = (selected + 1) % game_count; lastNav = now; }
+          if (ev.caxis.value < -16000) {
+            if (level == 0) sel_cat = (sel_cat + CAT_COUNT - 1) % CAT_COUNT;
+            else selected = cat_step(selected, -1);
+            lastNav = now;
+          } else if (ev.caxis.value > 16000) {
+            if (level == 0) sel_cat = (sel_cat + 1) % CAT_COUNT;
+            else selected = cat_step(selected, +1);
+            lastNav = now;
+          }
         }
       }
     }
@@ -282,46 +353,69 @@ int main(int argc, char **argv) {
 
     /* Title: short on tiny screens (240x240 handhelds). */
     const char *title = small ? "SONIC" : "SONIC DECOMPILED ORIGINS";
-    int ts = fit_scale(title, (int)(W * 0.95), 4);
+    int ts = fit_scale(title, (int)(W * 0.95), small ? 4 : 8);
     int ty = H / 20;
     SDL_SetRenderDrawColor(ren, 0xf8, 0xc8, 0x20, 255);
     draw_text(ren, (W - text_width(title, ts)) / 2, ty, ts, title);
 
-    const char *hint = small ? "A: JUGAR   B: SALIR"
-                             : "FLECHAS: MOVER   ENTER: JUGAR   ALT+ENTER: PANTALLA COMPLETA   ESC: SALIR";
+    const char *hint = small
+        ? (level == 0 ? "A: ELEGIR   B: SALIR" : "A: JUGAR   B: VOLVER")
+        : (level == 0 ? "FLECHAS: MOVER   ENTER: ELEGIR   ESC: SALIR"
+                      : "FLECHAS: MOVER   ENTER: JUGAR   ESC: VOLVER   ALT+ENTER: PANTALLA COMPLETA");
     int hs = fit_scale(hint, (int)(W * 0.95), 2);
     int hy = ty + 7 * ts + H / 24;
     SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
     draw_text(ren, (W - text_width(hint, hs)) / 2, hy, hs, hint);
 
-    /* Two columns only when there is room; titles only (no console labels). */
-    int cols = (game_count > 4 && !small) ? 2 : 1;
-    int rows = (game_count + cols - 1) / cols;
-    int colW = W / cols;
-
-    int es = 4;
-    for (int i = 0; i < game_count; i++)
-      es = fit_scale(games[i].title, (int)(colW * 0.9), es);
-
     int startY = hy + 7 * hs + H / 16;
     int avail = H - startY - H / 16;
-    int step = avail / rows;
-    if (step < 7 * es + 4) step = 7 * es + 4;
 
-    for (int i = 0; i < game_count; i++) {
-      const struct game *g = &games[i];
-      const int ok = path_ok(g->binary) && path_ok(g->rom);
-      int col = i / rows;
-      int row = i % rows;
-      if (col >= cols) col = cols - 1;
+    if (level == 0) {
+      /* Category menu */
+      int es = small ? 4 : 6;
+      for (int c = 0; c < CAT_COUNT; c++)
+        es = fit_scale(cat_names[c], (int)(W * 0.9), es);
+      int step = avail / CAT_COUNT;
+      if (step < 7 * es + 8) step = 7 * es + 8;
+      for (int c = 0; c < CAT_COUNT; c++) {
+        if (c == sel_cat) SDL_SetRenderDrawColor(ren, 0xff, 0xff, 0xff, 255);
+        else SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
+        int y = startY + c * step + (step - 7 * es) / 2;
+        draw_text(ren, (W - text_width(cat_names[c], es)) / 2, y, es, cat_names[c]);
+      }
+    } else {
+      /* Game menu for the selected category */
+      int idx[16], cnt = 0;
+      for (int i = 0; i < game_count && cnt < 16; i++)
+        if (game_cat[i] == sel_cat) idx[cnt++] = i;
 
-      if (i == selected) SDL_SetRenderDrawColor(ren, 0xff, 0xff, 0xff, 255);
-      else if (!ok) SDL_SetRenderDrawColor(ren, 0xff, 0x70, 0x70, 255);
-      else SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
+      int cols = (cnt > 4 && !small) ? 2 : 1;
+      int rows = (cnt + cols - 1) / cols;
+      int colW = W / cols;
 
-      int x = col * colW + (colW - text_width(g->title, es)) / 2;
-      int ly = startY + row * step + (step - 7 * es) / 2;
-      draw_text(ren, x, ly, es, g->title);
+      int es = small ? 4 : 6;
+      for (int k = 0; k < cnt; k++)
+        es = fit_scale(games[idx[k]].title, (int)(colW * 0.9), es);
+
+      int step = avail / rows;
+      if (step < 7 * es + 4) step = 7 * es + 4;
+
+      for (int k = 0; k < cnt; k++) {
+        int i = idx[k];
+        const struct game *g = &games[i];
+        const int ok = path_ok(g->binary) && path_ok(g->rom);
+        int col = k / rows;
+        int row = k % rows;
+        if (col >= cols) col = cols - 1;
+
+        if (i == selected) SDL_SetRenderDrawColor(ren, 0xff, 0xff, 0xff, 255);
+        else if (!ok) SDL_SetRenderDrawColor(ren, 0xff, 0x70, 0x70, 255);
+        else SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
+
+        int x = col * colW + (colW - text_width(g->title, es)) / 2;
+        int ly = startY + row * step + (step - 7 * es) / 2;
+        draw_text(ren, x, ly, es, g->title);
+      }
     }
 
     SDL_RenderPresent(ren);
