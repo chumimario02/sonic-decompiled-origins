@@ -9,6 +9,8 @@ se compila para tu máquina (Windows, Linux o Raspberry Pi).
 | Sonic 2 | RSDKv4 | decompilación (C++) |
 | Sonic 3 & Knuckles | segagenesisrecomp | recompilación estática (C) |
 | Sonic CD | RSDKv3 | decompilación (C++) |
+| Sonic Chaos | smsggrecomp | recompilación estática (C) |
+| Sonic Triple Trouble | smsggrecomp | recompilación estática (C) |
 
 ## Lo que NO incluye
 

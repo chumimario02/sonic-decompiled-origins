@@ -35,6 +35,8 @@ static const struct game games[] = {
   { "SONIC 2",      "RSDK",   "Sonic12v4/linux-out-s2/RSDKv4",    "Sonic12v4/linux-out-s2/Data.rsdk", "usingCWD=true", "Sonic12v4/linux-out-s2",  NULL },
   { "SONIC 3 & K",  "RECOMP", "Sonic3AndKnucklesRecomp/linux-out/Sonic3KRecomp", "Sonic3AndKnucklesRecomp/linux-out/sonic3k.bin", "", "Sonic3AndKnucklesRecomp/linux-out", NULL },
   { "SONIC CD",     "RSDK",   "SonicCDv3/linux-out/RSDKv3",       "SonicCDv3/linux-out/Data.rsdk",    "",              "SonicCDv3/linux-out",     NULL },
+  { "SONIC CHAOS",  "RECOMP", "SonicChaosRecomp/linux-out/SonicChaosRecomp", "SonicChaosRecomp/linux-out/sonicchaos.gg", "--gg --window 3", "SonicChaosRecomp/linux-out", NULL },
+  { "SONIC TT",     "RECOMP", "SonicTripleTroubleSMSRecomp/linux-out/SonicTripleTroubleSMSRecomp", "SonicTripleTroubleSMSRecomp/linux-out/sonicttsms.sms", "--sms --interp --window 3", "SonicTripleTroubleSMSRecomp/linux-out", NULL },
 };
 static const int game_count = (int)(sizeof(games) / sizeof(games[0]));
 
@@ -144,10 +146,19 @@ static void launch(const struct game *g) {
         setenv("LD_LIBRARY_PATH", newlp, 1);
       }
     }
-    if (g->args && g->args[0])
-      execl(exe, exe, g->args, rom, (char *)NULL);
-    else
-      execl(exe, exe, rom, (char *)NULL);
+    /* Split extra args on spaces, then append the ROM/data path. */
+    char argsbuf[256];
+    char *argv[16];
+    int argc = 0;
+    argv[argc++] = exe;
+    if (g->args && g->args[0]) {
+      snprintf(argsbuf, sizeof(argsbuf), "%s", g->args);
+      for (char *tok = strtok(argsbuf, " "); tok && argc < 14; tok = strtok(NULL, " "))
+        argv[argc++] = tok;
+    }
+    argv[argc++] = rom;
+    argv[argc] = NULL;
+    execv(exe, argv);
     _exit(127);
   } else if (pid > 0) {
     if (lg) { fprintf(lg, "spawn pid=%d cwd=%s cmd=%s %s %s\n", (int)pid, cwd, exe, g->args ? g->args : "", rom); fclose(lg); }

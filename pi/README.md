@@ -8,6 +8,8 @@ Juegos nativos (no emulados):
 | Sonic 2 | RSDKv4 | `Sonic12v4/linux-out-s2/RSDKv4` |
 | Sonic 3 & Knuckles | Recomp (C) | `Sonic3AndKnucklesRecomp/linux-out/Sonic3KRecomp` |
 | Sonic CD | RSDKv3 | `SonicCDv3/linux-out/RSDKv3` |
+| Sonic Chaos | Recomp SMS/GG (C) | `SonicChaosRecomp/linux-out/SonicChaosRecomp` |
+| Sonic Triple Trouble | Recomp GG (C) | `SonicTripleTroubleRecomp/linux-out/SonicTripleTroubleRecomp` |
 
 > **IMPORTANTE: necesita sistema de 64 bits (ARM64 / aarch64).**
 > Raspberry Pi OS 64-bit sí; imágenes RetroPie de 32 bits (armhf) NO sirven
@@ -86,6 +88,11 @@ WindowScale=1
 
 ## 6. Notas
 
-- **No se incluyen ROMs ni assets**: usa tu copia legal (`Data.rsdk`, `sonic3k.bin`).
+- **No se incluyen ROMs ni assets**: usa tu copia legal (`Data.rsdk`, `sonic3k.bin`, `sonicchaos.gg`, `sonictt.gg`).
+- **Sonic Triple Trouble**: el motor se atasca en el SEGA screen del GG. Genera el ROM
+  parcheado con `tools/patch_tt.py` (2 bytes) y usa ese `sonictt.gg`:
+  ```bash
+  python3 tools/patch_tt.py "Triple Trouble (GG).gg" roms/sonictt.gg
+  ```
 - Sonic CD: solo las cinemáticas (Theora) son pesadas; el gameplay va bien.
 - Sonic 3 & K en Zero 2 W: puede ir justo de RAM; cierra otros servicios.

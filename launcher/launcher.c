@@ -45,8 +45,10 @@ struct game {
 static const struct game games[] = {
   { "SONIC 1", "RSDK",   "games/sonic1rsdk/RSDKv4", "games/sonic1rsdk/Data.rsdk", "usingCWD=true", "GENESIS", "games/sonic1rsdk" },
   { "SONIC 2", "RSDK",   "games/sonic2rsdk/RSDKv4", "games/sonic2rsdk/Data.rsdk", "usingCWD=true", "GENESIS", "games/sonic2rsdk" },
-  { "SONIC 3 & K", "RECOMP", "games/s3k",      "roms/s3k.bin",      "",         "GENESIS", NULL },
+  { "SONIC 3 & K", "RECOMP", "games/s3k",      "roms/s3k.bin",      "",         "GENESIS", "games" },
   { "SONIC CD",    "RSDK",   "games/soniccd/SonicCD", "games/soniccd/Data.rsdk", "", "SEGA CD", "games/soniccd" },
+  { "SONIC CHAOS", "RECOMP", "games/sonicchaos/SonicChaosRecomp", "roms/sonicchaos.gg", "--gg --window 3", "GAME GEAR", "games/sonicchaos" },
+  { "SONIC TT",    "RECOMP", "games/sonicttsms/SonicTripleTroubleSMSRecomp", "roms/sonicttsms.sms", "--sms --interp --window 3", "MASTER SYSTEM", "games/sonicttsms" },
 };
 static const int game_count = (int)(sizeof(games) / sizeof(games[0]));
 
@@ -264,7 +266,8 @@ int main(int argc, char **argv) {
 
   SDL_Window *win = SDL_CreateWindow("SONIC DECOMPILED ORIGINS",
                                      SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                     WINDOW_W, WINDOW_H, SDL_WINDOW_SHOWN);
+                                     WINDOW_W, WINDOW_H,
+                                     SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP);
   SDL_Renderer *ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if (!ren) ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE);
   SDL_RenderSetLogicalSize(ren, WINDOW_W, WINDOW_H);
@@ -280,7 +283,7 @@ int main(int argc, char **argv) {
   /* Flat menu: one entry per game. */
   int selected = 0;
   int running = 1;
-  int fullscreen = 0;
+  int fullscreen = 1;
 
   while (running) {
     SDL_Event ev;

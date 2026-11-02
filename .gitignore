@@ -28,3 +28,7 @@ preview-*.png
 launcher.log
 spawn.out
 last_error.log
+
+*.gg
+*.sms
+*.gen
