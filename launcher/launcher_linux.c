@@ -294,36 +294,34 @@ int main(int argc, char **argv) {
     SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
     draw_text(ren, (W - text_width(hint, hs)) / 2, hy, hs, hint);
 
-    /* Common entry scale (same size for every row). */
+    /* Two columns only when there is room; titles only (no console labels). */
+    int cols = (game_count > 4 && !small) ? 2 : 1;
+    int rows = (game_count + cols - 1) / cols;
+    int colW = W / cols;
+
     int es = 4;
     for (int i = 0; i < game_count; i++)
-      es = fit_scale(small ? games[i].title : games[i].title, (int)(W * 0.9), es);
+      es = fit_scale(games[i].title, (int)(colW * 0.9), es);
 
     int startY = hy + 7 * hs + H / 16;
     int avail = H - startY - H / 16;
-    int step = avail / game_count;
+    int step = avail / rows;
     if (step < 7 * es + 4) step = 7 * es + 4;
 
     for (int i = 0; i < game_count; i++) {
       const struct game *g = &games[i];
       const int ok = path_ok(g->binary) && path_ok(g->rom);
-      char line[96];
-      if (small) snprintf(line, sizeof(line), "%s", g->title);
-      else snprintf(line, sizeof(line), "%s  (%s)", g->title, g->hint);
+      int col = i / rows;
+      int row = i % rows;
+      if (col >= cols) col = cols - 1;
 
       if (i == selected) SDL_SetRenderDrawColor(ren, 0xff, 0xff, 0xff, 255);
       else if (!ok) SDL_SetRenderDrawColor(ren, 0xff, 0x70, 0x70, 255);
       else SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
 
-      int ly = startY + i * step + (step - 7 * es) / 2;
-      draw_text(ren, (W - text_width(line, es)) / 2, ly, es, line);
-
-      if (!ok && !small) {
-        SDL_SetRenderDrawColor(ren, 0xff, 0x40, 0x40, 255);
-        const char *m = "(FALTA JUEGO O DATOS)";
-        int ms = fit_scale(m, (int)(W * 0.8), 2);
-        draw_text(ren, (W - text_width(m, ms)) / 2, ly + 7 * es + 4, ms, m);
-      }
+      int x = col * colW + (colW - text_width(g->title, es)) / 2;
+      int ly = startY + row * step + (step - 7 * es) / 2;
+      draw_text(ren, x, ly, es, g->title);
     }
 
     SDL_RenderPresent(ren);

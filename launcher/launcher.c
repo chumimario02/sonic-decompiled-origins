@@ -114,6 +114,17 @@ static void draw_text(SDL_Renderer *r, int x, int y, int scale, const char *s) {
   }
 }
 
+static int text_width(const char *s, int scale) { return (int)strlen(s) * 6 * scale; }
+
+static int fit_scale(const char *s, int maxw, int cap) {
+  int n = (int)strlen(s);
+  if (n <= 0) return 1;
+  int s2 = maxw / (n * 6);
+  if (s2 < 1) s2 = 1;
+  if (s2 > cap) s2 = cap;
+  return s2;
+}
+
 static int game_binary_exists(const char *binary) {
   char path[512];
   snprintf(path, sizeof(path), "%s\\%s%s", g_workdir[0] ? g_workdir : ".", binary, EXE_SUFFIX);
@@ -270,7 +281,6 @@ int main(int argc, char **argv) {
                                      SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP);
   SDL_Renderer *ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if (!ren) ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE);
-  SDL_RenderSetLogicalSize(ren, WINDOW_W, WINDOW_H);
 
   SDL_GameController *pad = NULL;
   for (int i = 0; i < SDL_NumJoysticks(); i++) {
@@ -317,34 +327,60 @@ int main(int argc, char **argv) {
       }
     }
 
+    int W = WINDOW_W, H = WINDOW_H;
+    SDL_GetRendererOutputSize(ren, &W, &H);
+    if (W <= 0 || H <= 0) { W = WINDOW_W; H = WINDOW_H; }
+    int small = (W < 420 || H < 320);
+
     SDL_SetRenderDrawColor(ren, 10, 12, 22, 255);
     SDL_RenderClear(ren);
 
     SDL_SetRenderDrawColor(ren, 0x2a, 0x6f, 0xdb, 255);
-    SDL_Rect bar = {0, 0, WINDOW_W, 6};
+    SDL_Rect bar = {0, 0, W, 6};
     SDL_RenderFillRect(ren, &bar);
 
+    const char *title = small ? "SONIC" : "SONIC DECOMPILED ORIGINS";
+    int ts = fit_scale(title, (int)(W * 0.95), 5);
+    int ty = H / 20;
     SDL_SetRenderDrawColor(ren, 0xf8, 0xc8, 0x20, 255);
-    draw_text(ren, (WINDOW_W - (int)strlen("SONIC DECOMPILED ORIGINS") * 6 * 4) / 2, 20, 4, "SONIC DECOMPILED ORIGINS");
+    draw_text(ren, (W - text_width(title, ts)) / 2, ty, ts, title);
 
+    const char *hint = small ? "A: JUGAR   B: SALIR"
+                             : "FLECHAS: MOVER   ENTER: JUGAR   ALT+ENTER: PANTALLA COMPLETA   ESC: SALIR";
+    int hs = fit_scale(hint, (int)(W * 0.95), 2);
+    int hy = ty + 7 * ts + H / 24;
     SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
-    draw_text(ren, (WINDOW_W - (int)strlen("ELIGE JUEGO. FLECHAS: MOVER   ENTER: JUGAR   ESC: SALIR") * 6 * 2) / 2, 70, 2, "ELIGE JUEGO. FLECHAS: MOVER   ENTER: JUGAR   ESC: SALIR");
+    draw_text(ren, (W - text_width(hint, hs)) / 2, hy, hs, hint);
 
-    int y = 120;
+    /* 6 games: two columns (left first half, right second half). Titles only,
+       no console labels (they overflowed the screen). */
+    int cols = (game_count > 4) ? 2 : 1;
+    int rows = (game_count + cols - 1) / cols;
+    int colW = W / cols;
+
+    int es = 4;
+    for (int i = 0; i < game_count; i++)
+      es = fit_scale(games[i].title, (int)(colW * 0.9), es);
+
+    int startY = hy + 7 * hs + H / 14;
+    int avail = H - startY - H / 12;
+    int step = avail / rows;
+    if (step < 7 * es + 4) step = 7 * es + 4;
+
     for (int i = 0; i < game_count; i++) {
       const struct game *g = &games[i];
       const int ok = game_binary_exists(g->binary) && file_exists(g->rom);
+      int col = i / rows;
+      int row = i % rows;
+      if (col >= cols) col = cols - 1;
+
       if (i == selected) SDL_SetRenderDrawColor(ren, 0xff, 0xff, 0xff, 255);
+      else if (!ok) SDL_SetRenderDrawColor(ren, 0xff, 0x70, 0x70, 255);
       else SDL_SetRenderDrawColor(ren, 0x60, 0x6a, 0x80, 255);
-      char line[64];
-      snprintf(line, sizeof(line), "%s  (%s)", g->title, g->hint);
-      int lw = (int)strlen(line) * 6 * 4;
-      draw_text(ren, (WINDOW_W - lw) / 2, y, 4, line);
-      if (!ok) {
-        SDL_SetRenderDrawColor(ren, 0xff, 0x40, 0x40, 255);
-        draw_text(ren, (WINDOW_W - (int)strlen("(FALTA ROM O JUEGO)") * 6 * 3) / 2, y + 34, 3, "(FALTA ROM O JUEGO)");
-      }
-      y += 70;
+
+      int x = col * colW + (colW - text_width(g->title, es)) / 2;
+      int y = startY + row * step + (step - 7 * es) / 2;
+      draw_text(ren, x, y, es, g->title);
     }
 
     SDL_RenderPresent(ren);
