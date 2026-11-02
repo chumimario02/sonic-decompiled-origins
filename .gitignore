@@ -1,13 +1,30 @@
+# ROMs y datos de juego (nunca subir)
 roms/
 games/
-src/
-launcher/launcher
-launcher/launcher.exe
-launcher.log
-spawn.out
-*.o# runtime files created by the games
+pi-out/
+*.rsdk
+*.bin
+*.srm
 settings.ini
 UData.bin
+SData.bin
 usage.txt
-*.srm
+
+# Binarios compilados
+launcher/launcher
+launcher/launcher.exe
+launcher/launcher_linux
+launcher/launcher_arm64
+src/
+*.o
+*.exe
+
+# Paquetes y artefactos
+*.tar.gz
+*.zip
+preview-*.png
+
+# Logs
+launcher.log
+spawn.out
 last_error.log
