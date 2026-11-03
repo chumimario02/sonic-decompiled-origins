@@ -14,6 +14,7 @@ Juegos nativos (no emulados):
 | Tails Adventure | Recomp GG (C) | `TailsAdventureRecomp/linux-out/TailsAdventureRecomp` |
 | **Sonic 1 Forever** | RSDKv4 (Team Forever) | `SonicForever/s1fs2a` |
 | **Sonic 2 Absolute** | RSDKv4 (Team Forever) | `Sonic2Absolute/s1fs2a` |
+| **Sonic CD Restored** | RSDKv3 (mod) | `SonicCDRestored/RSDKv3` |
 
 > **IMPORTANTE: necesita sistema de 64 bits (ARM64 / aarch64).**
 > Raspberry Pi OS 64-bit sí; imágenes RetroPie de 32 bits (armhf) NO sirven
@@ -71,6 +72,13 @@ Coloca todo en `/home/pi/SonicOrigins/` con esta estructura:
     ├── Scripts/                 # scripts del mod (texto)
     ├── lib/libtheoradec.so.2
     └── settings.ini
+
+└── SonicCDRestored/
+    ├── RSDKv3                   # motor RSDKv3 (ARM64)
+    ├── Data.rsdk                # tu copia legal de Sonic CD
+    ├── mods/                    # mod Sonic CD Restored + modconfig.ini
+    ├── Videos/                  # FMVs remasterizados (opcional)
+    └── settings.ini
 ```
 
 Marca permisos:
@@ -103,6 +111,24 @@ carpeta `Data/` y la parchea, además de añadir `Scripts/` (texto).
 > El motor compila los ~466 scripts de texto la primera vez de cada arranque;
 > en una Zero 2 W tarda unos segundos en salir el logo.
 
+### Sonic CD Restored
+
+Mod de Sonic CD (RSDKv3). La carpeta **tiene que llamarse `mods` en minúsculas**
+(el motor la busca así en Linux).
+
+1. Descarga Sonic CD Restored (GameBanana) y copia:
+   - `Mods/Sonic CD Restored/` → `SonicCDRestored/mods/Sonic CD Restored/`
+   - `Videos/` → `SonicCDRestored/Videos/` (opcional, ~271 MB de FMVs)
+2. Crea `SonicCDRestored/mods/modconfig.ini`:
+   ```ini
+   [mods]
+   Sonic CD Restored=true
+   ```
+3. Listo: "SONIC CD RESTORED" en el launcher.
+
+> El mod ocupa ~531 MB (casi todo música 500 kbps). Si vas justo de SD,
+> puedes borrar `Videos/` y usar los vídeos originales del `Data.rsdk`.
+
 ## 4. RetroPie → Ports
 Copia los `.sh` de `pi/ports/` a `/home/pi/RetroPie/roms/ports/` y:
 
@@ -113,7 +139,7 @@ chmod +x /home/pi/RetroPie/roms/ports/*.sh
 Aparecerán en **EmulationStation → Ports**:
 
 - Sonic Decompiled Origins (menú)
-- Sonic 1 / Sonic 2 / Sonic 3 & Knuckles / Sonic CD / Sonic 1 Forever / Sonic 2 Absolute (directo)
+- Sonic 1 / Sonic 2 / Sonic 3 & Knuckles / Sonic CD / Sonic 1 Forever / Sonic 2 Absolute / Sonic CD Restored (directo)
 
 ## 5. Ajustes de rendimiento (Zero 2 W)
 

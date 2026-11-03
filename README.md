@@ -13,6 +13,7 @@ se compila para tu máquina (Windows, Linux o Raspberry Pi).
 | Sonic Triple Trouble | smsggrecomp | recompilación estática (C) |
 | Sonic 1 Forever | RSDKv4 (Team Forever) | fangame (motor + mod `Mods/`) |
 | Sonic 2 Absolute | RSDKv4 (Team Forever) | fangame (motor + `Data/` + `Scripts/`) |
+| Sonic CD Restored | RSDKv3 (mod de Sonic CD) | fangame (motor + `mods/`) |
 | SRB2 (Sonic Robo Blast 2) | motor Doom (open source) | juego fan nativo |
 
 ## Lo que NO incluye
@@ -23,6 +24,7 @@ se compila para tu máquina (Windows, Linux o Raspberry Pi).
   - Sonic 3 & K → `sonic3k.bin` (tu ROM)
   - Sonic 1 Forever → `Data.rsdk` de Sonic 1 + la carpeta `Mods/` del juego de Team Forever
   - Sonic 2 Absolute → `Data/` + `Scripts/` que genera su `S2A Setup.bat`
+  - Sonic CD Restored → `Data.rsdk` de Sonic CD + la carpeta `mods/` del mod
 
 ## Plataformas
 
