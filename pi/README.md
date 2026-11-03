@@ -9,14 +9,17 @@ Juegos nativos (no emulados):
 | Sonic 3 & Knuckles | Recomp (C) | `Sonic3AndKnucklesRecomp/linux-out/Sonic3KRecomp` |
 | Sonic CD | RSDKv3 | `SonicCDv3/linux-out/RSDKv3` |
 | Sonic Chaos | Recomp SMS/GG (C) | `SonicChaosRecomp/linux-out/SonicChaosRecomp` |
-| Sonic Triple Trouble | Recomp GG (C) | `SonicTripleTroubleRecomp/linux-out/SonicTripleTroubleRecomp` |
+| Sonic Triple Trouble | Recomp GG (C) | `SonicTripleTroubleSMSRecomp/linux-out/SonicTripleTroubleSMSRecomp` |
+| Sonic 2 SMS | Recomp SMS (C) | `Sonic2SMSRecomp/linux-out/Sonic2SMSRecomp` |
+| Tails Adventure | Recomp GG (C) | `TailsAdventureRecomp/linux-out/TailsAdventureRecomp` |
+| **Sonic 1 Forever** | RSDKv4 (Team Forever) | `SonicForever/s1fs2a` |
 
 > **IMPORTANTE: necesita sistema de 64 bits (ARM64 / aarch64).**
 > Raspberry Pi OS 64-bit sí; imágenes RetroPie de 32 bits (armhf) NO sirven
 > con estos binarios.
 >
 > **glibc mínima: 2.38** para los RSDK (y 2.36+ para el launcher).
-> Raspberry Pi OS **trixie (Debian 13, glibc 2.41)** o superior ✅.
+> Raspberry Pi OS **trixie (Debian 13, glibc 2.41)** o superior ✓
 > Bookworm (glibc 2.36) **no** sirve para los RSDK.
 
 ## 1. Sistema recomendado
@@ -49,17 +52,37 @@ Coloca todo en `/home/pi/SonicOrigins/` con esta estructura:
 │   └── linux-out-s2/            # RSDKv4 + Data.rsdk (Sonic 2) + settings.ini
 ├── SonicCDv3/
 │   └── linux-out/               # RSDKv3 + Data.rsdk (CD) + settings.ini
-└── Sonic3AndKnucklesRecomp/
-    └── linux-out/               # Sonic3KRecomp + sonic3k.bin + settings.ini + s3k.srm
+├── Sonic3AndKnucklesRecomp/
+│   └── linux-out/               # Sonic3KRecomp + sonic3k.bin + settings.ini + s3k.srm
+├── SonicChaosRecomp/linux-out/
+├── SonicTripleTroubleSMSRecomp/linux-out/
+├── Sonic2SMSRecomp/linux-out/
+├── TailsAdventureRecomp/linux-out/
+└── SonicForever/
+    ├── s1fs2a                   # motor RSDKv4 de Team Forever (ARM64)
+    ├── Data.rsdk                # tu copia legal de Sonic 1 (2013)
+    ├── Mods/                    # mod de Sonic 1 Forever (lo trae el juego)
+    └── settings.ini
 ```
 
 Marca permisos:
 
 ```bash
 chmod +x /home/pi/SonicOrigins/launcher
+chmod +x /home/pi/SonicOrigins/SonicForever/s1fs2a
 ```
 
-## 4. RetroPie — Ports
+### Sonic 1 Forever
+
+El motor es el mismo RSDKv4, **el contenido de Forever es la carpeta `Mods/`**.
+Para montarlo:
+
+1. Descarga Sonic 1 Forever (versión 1.5.1) de Team Forever.
+2. Copia su carpeta `Mods/` a `SonicForever/Mods/`.
+3. Copia tu `Data.rsdk` de Sonic 1 (el mismo de `Sonic12v4/linux-out/`).
+4. Listo: al elegir "SONIC 1 FOREVER" en el launcher carga el mod.
+
+## 4. RetroPie → Ports
 
 Copia los `.sh` de `pi/ports/` a `/home/pi/RetroPie/roms/ports/` y:
 
@@ -70,7 +93,7 @@ chmod +x /home/pi/RetroPie/roms/ports/*.sh
 Aparecerán en **EmulationStation → Ports**:
 
 - Sonic Decompiled Origins (menú)
-- Sonic 1 / Sonic 2 / Sonic 3 & Knuckles / Sonic CD (directo)
+- Sonic 1 / Sonic 2 / Sonic 3 & Knuckles / Sonic CD / Sonic 1 Forever (directo)
 
 ## 5. Ajustes de rendimiento (Zero 2 W)
 
@@ -88,7 +111,8 @@ WindowScale=1
 
 ## 6. Notas
 
-- **No se incluyen ROMs ni assets**: usa tu copia legal (`Data.rsdk`, `sonic3k.bin`, `sonicchaos.gg`, `sonictt.gg`).
+- **No se incluyen ROMs ni assets**: usa tu copia legal (`Data.rsdk`, `sonic3k.bin`,
+  `sonicchaos.gg`, `sonictt.gg`, `Mods/` de Sonic 1 Forever).
 - **Sonic Triple Trouble**: el motor se atasca en el SEGA screen del GG. Genera el ROM
   parcheado con `tools/patch_tt.py` (2 bytes) y usa ese `sonictt.gg`:
   ```bash
@@ -96,3 +120,4 @@ WindowScale=1
   ```
 - Sonic CD: solo las cinemáticas (Theora) son pesadas; el gameplay va bien.
 - Sonic 3 & K en Zero 2 W: puede ir justo de RAM; cierra otros servicios.
+- Sonic 1 Forever en Zero 2 W: si va justo, baja `ScreenWidth` en su `settings.ini`.
