@@ -129,6 +129,10 @@ Mod de Sonic CD (RSDKv3). La carpeta **tiene que llamarse `mods` en minúsculas*
 > El mod ocupa ~531 MB (casi todo música 500 kbps). Si vas justo de SD,
 > puedes borrar `Videos/` y usar los vídeos originales del `Data.rsdk`.
 
+> **Ojo:** si arrancas sin la estructura correcta, el juego reescribe
+> `mods/modconfig.ini` con `false`. En ese caso vuelve a poner
+> `Sonic CD Restored=true` (o restaura el fichero) y arranca otra vez.
+
 ## 4. RetroPie → Ports
 Copia los `.sh` de `pi/ports/` a `/home/pi/RetroPie/roms/ports/` y:
 

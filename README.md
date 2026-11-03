@@ -25,6 +25,8 @@ se compila para tu máquina (Windows, Linux o Raspberry Pi).
   - Sonic 1 Forever → `Data.rsdk` de Sonic 1 + la carpeta `Mods/` del juego de Team Forever
   - Sonic 2 Absolute → `Data/` + `Scripts/` que genera su `S2A Setup.bat`
   - Sonic CD Restored → `Data.rsdk` de Sonic CD + la carpeta `mods/` del mod
+    (en Linux **tiene que llamarse `mods` en minúsculas** y `mods/modconfig.ini`
+    con `Sonic CD Restored=true`; si el juego lo pone a `false`, vuelve a activarlo)
 
 ## Plataformas
 
