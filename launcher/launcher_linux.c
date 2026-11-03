@@ -183,15 +183,20 @@ static void launch(const struct game *g) {
     char argsbuf[256];
     char *argv[16];
     int argc = 0;
-    argv[argc++] = exe;
-    if (!(g->args && strcmp(g->args, "NOROM") == 0)) {
-      if (g->args && g->args[0]) {
-        snprintf(argsbuf, sizeof(argsbuf), "%s", g->args);
-        for (char *tok = strtok(argsbuf, " "); tok && argc < 14; tok = strtok(NULL, " "))
-          argv[argc++] = tok;
-      }
-      argv[argc++] = rom;
+    const char *extra = g->args;
+    int norom = 0;
+    if (extra && strncmp(extra, "NOROM", 5) == 0) {
+      norom = 1;
+      extra += 5;
+      if (*extra == ' ') extra++;
     }
+    argv[argc++] = exe;
+    if (extra && extra[0]) {
+      snprintf(argsbuf, sizeof(argsbuf), "%s", extra);
+      for (char *tok = strtok(argsbuf, " "); tok && argc < 14; tok = strtok(NULL, " "))
+        argv[argc++] = tok;
+    }
+    if (!norom) argv[argc++] = rom;
     argv[argc] = NULL;
     execv(exe, argv);
     _exit(127);
