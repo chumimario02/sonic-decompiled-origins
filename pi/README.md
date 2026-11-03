@@ -96,9 +96,3 @@ WindowScale=1
   ```
 - Sonic CD: solo las cinemáticas (Theora) son pesadas; el gameplay va bien.
 - Sonic 3 & K en Zero 2 W: puede ir justo de RAM; cierra otros servicios.
-- **SRB2**: instálalo con Flatpak (incluye ARM64) y usa el port `ports/SRB2.sh`:
-  ```bash
-  sudo apt install flatpak
-  flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-  flatpak install -y flathub org.srb2.SRB2
-  ```
