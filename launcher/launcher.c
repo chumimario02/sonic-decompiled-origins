@@ -51,7 +51,7 @@ static const struct game games[] = {
   { "SONIC TT",    "RECOMP", "games/sonicttsms/SonicTripleTroubleSMSRecomp", "roms/sonicttsms.sms", "--sms --interp --window 3", "MASTER SYSTEM", "games/sonicttsms" },
   { "SONIC 2 SMS", "RECOMP", "games/sonic2sms/Sonic2SMSRecomp", "roms/sonic2sms.sms", "--sms --window 3", "MASTER SYSTEM", "games/sonic2sms" },
   { "TAILS ADV",   "RECOMP", "games/tailsadv/TailsAdventureRecomp", "roms/tailsadv.gg", "--gg --window 3", "GAME GEAR", "games/tailsadv" },
-  { "SRB2",        "FAN",    "games/srb2/srb2win", "games/srb2/srb2.pk3", "NOROM -borderless", "PC / DOOM", "games/srb2" },
+  { "SRB2",        "FAN",    "games/srb2/srb2win", "games/srb2/srb2.pk3", "NOROM", "PC / DOOM", "games/srb2" },
 };
 static const int game_count = (int)(sizeof(games) / sizeof(games[0]));
 
