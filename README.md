@@ -11,6 +11,7 @@ se compila para tu máquina (Windows, Linux o Raspberry Pi).
 | Sonic CD | RSDKv3 | decompilación (C++) |
 | Sonic Chaos | smsggrecomp | recompilación estática (C) |
 | Sonic Triple Trouble | smsggrecomp | recompilación estática (C) |
+| SRB2 (Sonic Robo Blast 2) | motor Doom (open source) | juego fan nativo |
 
 ## Lo que NO incluye
 

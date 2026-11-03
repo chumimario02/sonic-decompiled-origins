@@ -178,17 +178,20 @@ static void launch(const struct game *g) {
         setenv("LD_LIBRARY_PATH", newlp, 1);
       }
     }
-    /* Split extra args on spaces, then append the ROM/data path. */
+    /* Split extra args on spaces, then append the ROM/data path.
+       "NOROM" = the game loads its own data (e.g. SRB2). */
     char argsbuf[256];
     char *argv[16];
     int argc = 0;
     argv[argc++] = exe;
-    if (g->args && g->args[0]) {
-      snprintf(argsbuf, sizeof(argsbuf), "%s", g->args);
-      for (char *tok = strtok(argsbuf, " "); tok && argc < 14; tok = strtok(NULL, " "))
-        argv[argc++] = tok;
+    if (!(g->args && strcmp(g->args, "NOROM") == 0)) {
+      if (g->args && g->args[0]) {
+        snprintf(argsbuf, sizeof(argsbuf), "%s", g->args);
+        for (char *tok = strtok(argsbuf, " "); tok && argc < 14; tok = strtok(NULL, " "))
+          argv[argc++] = tok;
+      }
+      argv[argc++] = rom;
     }
-    argv[argc++] = rom;
     argv[argc] = NULL;
     execv(exe, argv);
     _exit(127);
