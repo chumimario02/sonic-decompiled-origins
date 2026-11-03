@@ -13,6 +13,7 @@ Juegos nativos (no emulados):
 | Sonic 2 SMS | Recomp SMS (C) | `Sonic2SMSRecomp/linux-out/Sonic2SMSRecomp` |
 | Tails Adventure | Recomp GG (C) | `TailsAdventureRecomp/linux-out/TailsAdventureRecomp` |
 | **Sonic 1 Forever** | RSDKv4 (Team Forever) | `SonicForever/s1fs2a` |
+| **Sonic 2 Absolute** | RSDKv4 (Team Forever) | `Sonic2Absolute/s1fs2a` |
 
 > **IMPORTANTE: necesita sistema de 64 bits (ARM64 / aarch64).**
 > Raspberry Pi OS 64-bit sí; imágenes RetroPie de 32 bits (armhf) NO sirven
@@ -63,6 +64,13 @@ Coloca todo en `/home/pi/SonicOrigins/` con esta estructura:
     ├── Data.rsdk                # tu copia legal de Sonic 1 (2013)
     ├── Mods/                    # mod de Sonic 1 Forever (lo trae el juego)
     └── settings.ini
+
+└── Sonic2Absolute/
+    ├── s1fs2a                   # el mismo motor (ARM64)
+    ├── Data/                    # datos desempaquetados de Sonic 2 + parche S2A
+    ├── Scripts/                 # scripts del mod (texto)
+    ├── lib/libtheoradec.so.2
+    └── settings.ini
 ```
 
 Marca permisos:
@@ -82,8 +90,20 @@ Para montarlo:
 3. Copia tu `Data.rsdk` de Sonic 1 (el mismo de `Sonic12v4/linux-out/`).
 4. Listo: al elegir "SONIC 1 FOREVER" en el launcher carga el mod.
 
-## 4. RetroPie → Ports
+### Sonic 2 Absolute
 
+S2A **no usa `Mods/`**: su instalador desempaqueta el `Data.rsdk` de Sonic 2 en una
+carpeta `Data/` y la parchea, además de añadir `Scripts/` (texto).
+
+1. Descarga Sonic 2 Absolute de Team Forever y ejecuta `S2A Setup.bat` en un PC
+   (con tu `Data.rsdk` de Sonic 2 o el APK de Sonic 2 Classic).
+2. Copia a `Sonic2Absolute/` las carpetas `Data/` y `Scripts/` que genera.
+3. Listo: al elegir "SONIC 2 ABSOLUTE" en el launcher arranca el mod.
+
+> El motor compila los ~466 scripts de texto la primera vez de cada arranque;
+> en una Zero 2 W tarda unos segundos en salir el logo.
+
+## 4. RetroPie → Ports
 Copia los `.sh` de `pi/ports/` a `/home/pi/RetroPie/roms/ports/` y:
 
 ```bash
@@ -93,7 +113,7 @@ chmod +x /home/pi/RetroPie/roms/ports/*.sh
 Aparecerán en **EmulationStation → Ports**:
 
 - Sonic Decompiled Origins (menú)
-- Sonic 1 / Sonic 2 / Sonic 3 & Knuckles / Sonic CD / Sonic 1 Forever (directo)
+- Sonic 1 / Sonic 2 / Sonic 3 & Knuckles / Sonic CD / Sonic 1 Forever / Sonic 2 Absolute (directo)
 
 ## 5. Ajustes de rendimiento (Zero 2 W)
 

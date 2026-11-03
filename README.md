@@ -12,6 +12,7 @@ se compila para tu máquina (Windows, Linux o Raspberry Pi).
 | Sonic Chaos | smsggrecomp | recompilación estática (C) |
 | Sonic Triple Trouble | smsggrecomp | recompilación estática (C) |
 | Sonic 1 Forever | RSDKv4 (Team Forever) | fangame (motor + mod `Mods/`) |
+| Sonic 2 Absolute | RSDKv4 (Team Forever) | fangame (motor + `Data/` + `Scripts/`) |
 | SRB2 (Sonic Robo Blast 2) | motor Doom (open source) | juego fan nativo |
 
 ## Lo que NO incluye
@@ -21,6 +22,7 @@ se compila para tu máquina (Windows, Linux o Raspberry Pi).
   - Sonic 1 / 2 / CD → `Data.rsdk` (de tu copia de Sonic Origins / móvil)
   - Sonic 3 & K → `sonic3k.bin` (tu ROM)
   - Sonic 1 Forever → `Data.rsdk` de Sonic 1 + la carpeta `Mods/` del juego de Team Forever
+  - Sonic 2 Absolute → `Data/` + `Scripts/` que genera su `S2A Setup.bat`
 
 ## Plataformas
 

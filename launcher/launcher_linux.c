@@ -40,11 +40,12 @@ static const struct game games[] = {
   { "SONIC 2 SMS",  "RECOMP", "Sonic2SMSRecomp/linux-out/Sonic2SMSRecomp", "Sonic2SMSRecomp/linux-out/sonic2sms.sms", "--sms --window 3", "Sonic2SMSRecomp/linux-out", NULL },
   { "TAILS ADV",    "RECOMP", "TailsAdventureRecomp/linux-out/TailsAdventureRecomp", "TailsAdventureRecomp/linux-out/tailsadv.gg", "--gg --window 3", "TailsAdventureRecomp/linux-out", NULL },
   { "SONIC 1 FOREVER", "FOREVER", "SonicForever/s1fs2a",        "SonicForever/Data.rsdk",           "usingCWD=true", "SonicForever",            NULL },
+  { "SONIC 2 ABSOLUTE", "ABSOLUTE", "Sonic2Absolute/s1fs2a",   "Sonic2Absolute/Data/Game/GameConfig.bin", "NOROM usingCWD=true", "Sonic2Absolute", NULL },
 };
 static const int game_count = (int)(sizeof(games) / sizeof(games[0]));
 
 /* Category: 0 = Genesis / 16-bit (+Sega CD), 1 = Master System / Game Gear, 2 = fan games. */
-static const int game_cat[] = { 0, 0, 0, 0, 1, 1, 1, 1, 2 };
+static const int game_cat[] = { 0, 0, 0, 0, 1, 1, 1, 1, 2, 2 };
 static const char *cat_names[] = { "GENESIS / 16-BIT", "SMS / GAME GEAR", "EXTRA / FAN" };
 #define CAT_COUNT 3
 
