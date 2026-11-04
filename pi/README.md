@@ -116,6 +116,10 @@ carpeta `Data/` y la parchea, además de añadir `Scripts/` (texto).
 Mod de Sonic CD (RSDKv3). La carpeta **tiene que llamarse `mods` en minúsculas**
 (el motor la busca así en Linux).
 
+> **Importante:** usa el `Data.rsdk` de **Sonic CD de Steam (2011)**.
+> El de Sonic Origins (78.711.043 bytes) **rompe los loops** y hace crashear
+> el ejecutable oficial del mod. El bueno es el de Steam (78.710.917 bytes).
+
 1. Descarga Sonic CD Restored (GameBanana) y copia:
    - `Mods/Sonic CD Restored/` → `SonicCDRestored/mods/Sonic CD Restored/`
    - `Videos/` → `SonicCDRestored/Videos/` (opcional, ~271 MB de FMVs)

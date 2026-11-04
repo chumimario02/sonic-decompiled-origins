@@ -24,7 +24,8 @@ se compila para tu máquina (Windows, Linux o Raspberry Pi).
   - Sonic 3 & K → `sonic3k.bin` (tu ROM)
   - Sonic 1 Forever → `Data.rsdk` de Sonic 1 + la carpeta `Mods/` del juego de Team Forever
   - Sonic 2 Absolute → `Data/` + `Scripts/` que genera su `S2A Setup.bat`
-  - Sonic CD Restored → `Data.rsdk` de Sonic CD + la carpeta `mods/` del mod
+  - Sonic CD Restored → `Data.rsdk` **de la versión de Steam 2011** (el de Origins
+    rompe los loops y hace crashear el exe del mod) + la carpeta `mods/` del mod
     (en Linux **tiene que llamarse `mods` en minúsculas** y `mods/modconfig.ini`
     con `Sonic CD Restored=true`; si el juego lo pone a `false`, vuelve a activarlo)
 
