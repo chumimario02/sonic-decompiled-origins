@@ -55,13 +55,18 @@ static const struct game games[] = {
   { "SONIC 2 ABSOLUTE", "ABSOLUTE", "games/s2a/Sonic2Absolute", "games/s2a/Data/Game/GameConfig.bin", "NOROM", "PC / RSDK", "games/s2a" },
   { "SONIC CD RESTORED", "RESTORED", "games/soniccd-restored/SonicCD", "games/soniccd-restored/Data.rsdk", "", "PC / RSDK", "games/soniccd-restored" },
   { "SRB2",        "FAN",    "games/srb2/srb2win", "games/srb2/srb2.pk3", "NOROM", "PC / DOOM", "games/srb2" },
+  { "SUPER MARIO 64", "SM64EX", "games/sm64/sm64", "roms/sm64.z64", "NOROM", "N64", "games/sm64" },
+  { "SMB1 ONLINE",    "ONLINE", "games/smb-online/smbvanilla", "games/smb-online/smb.nes", "", "NES ONLINE", "games/smb-online" },
+  { "SMB1 2P LOCAL",  "LOCAL",  "games/smb-online/smbvanilla", "games/smb-online/smb.nes", "--local-2p", "NES 2 JUG.", "games/smb-online" },
+  { "PONG",           "ARCADE", "games/pong/pong", "games/pong/controls.txt", "NOROM", "2 JUGADORES", "games/pong" },
 };
 static const int game_count = (int)(sizeof(games) / sizeof(games[0]));
 
-/* Category: 0 = Genesis / 16-bit (+Sega CD), 1 = Master System / Game Gear. */
-static const int game_cat[] = { 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2 };
-static const char *cat_names[] = { "GENESIS / 16-BIT", "SMS / GAME GEAR", "EXTRA / FAN" };
-#define CAT_COUNT 3
+/* Category: 0 = Genesis / 16-bit (+Sega CD), 1 = Master System / Game Gear,
+ * 2 = Extra / fan, 3 = Nintendo. */
+static const int game_cat[] = { 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 2, 3 };
+static const char *cat_names[] = { "GENESIS / 16-BIT", "SMS / GAME GEAR", "EXTRA / FAN", "NINTENDO / MARIO" };
+#define CAT_COUNT 4
 
 static int cat_first(int c) {
   for (int i = 0; i < game_count; i++) if (game_cat[i] == c) return i;
@@ -310,7 +315,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  SDL_Window *win = SDL_CreateWindow("SONIC DECOMPILED ORIGINS",
+  SDL_Window *win = SDL_CreateWindow("SONIC & MARIO COLLECTION",
                                      SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                      WINDOW_W, WINDOW_H,
                                      SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP);
@@ -401,7 +406,7 @@ int main(int argc, char **argv) {
     SDL_Rect bar = {0, 0, W, 6};
     SDL_RenderFillRect(ren, &bar);
 
-    const char *title = small ? "SONIC" : "SONIC DECOMPILED ORIGINS";
+    const char *title = small ? "COLLECTION" : "SONIC & MARIO COLLECTION";
     int ts = fit_scale(title, (int)(W * 0.95), small ? 4 : 8);
     int ty = H / 20;
     SDL_SetRenderDrawColor(ren, 0xf8, 0xc8, 0x20, 255);
